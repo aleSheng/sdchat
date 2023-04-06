@@ -9,6 +9,8 @@ import { PromptBook } from "./PromptBook"
 import { PromptEngine } from "./PromptEngine"
 import { Settings } from "./Settings"
 
+const webui_localhost = "http://localhost:3000"
+
 export function Message({ id }: { id: string }) {
   const [message, editMessage] = MessageList.useMessage(id)
   const [selectedImage, setSelectedImage] = React.useState(-1)
@@ -55,18 +57,18 @@ export function Message({ id }: { id: string }) {
           </div>
         )}
         <div className="flex flex-row gap-2 items-end h-fit">
-          <h1 className="font-semibold text-white">
+          <h1 className="font-semibold">
             {message.type === "you" ? "You" : "Stable Diffusion"}
           </h1>
           {message.timestamp && (
-            <p className="text-white/30 text-xs pb-0.5">
+            <p className="text-xs pb-0.5">
               {new Date(message.timestamp).toLocaleTimeString()}
             </p>
           )}
-          {message.modifiers && <Wand2 className="text-white/30 pb-[3px]" size={16} />}
+          {message.modifiers && <Wand2 className="pb-[3px]" size={16} />}
         </div>
         {message.prompt && message.type === "you" && (
-          <p className="text-white/75 text-left break-word">{message.prompt}</p>
+          <p className="text-left break-word">{message.prompt}</p>
         )}
         {message.images && message.settings && message.images.length > 0 && (
           <div className={`flex flex-row gap-2 overflow-hidden flex-wrap max-w-full`}>
@@ -182,7 +184,7 @@ export namespace Message {
 
     let res = null
     try {
-      res = await fetch("https://api.diffusion.chat/rate", {
+      res = await fetch(`${webui_localhost}/rate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -253,7 +255,7 @@ export namespace Message {
         SURE_ANIME_WORDS.some((word) => prompt.includes(word)) ||
         POSSIBLE_ANIME_WORDS.filter((word) => prompt.includes(word)).length >= 3
       ) {
-        res = await fetch("https://api.diffusion.chat/anime", {
+        res = await fetch(`${webui_localhost}/anime`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -267,7 +269,7 @@ export namespace Message {
           }),
         })
       } else {
-        res = await fetch("https://api.diffusion.chat/image", {
+        res = await fetch(`${webui_localhost}/image`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -30,7 +30,7 @@ export function Button({
 
   return (
     <button
-      className="border-white/10 border rounded px-3 py-1 text-white/75 font-semibold hover:bg-backgroundSecondary hover:text-white/100 duration-200"
+      className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
       onClick={() => {
         if (btn.id === "regenerate") {
           void Message.sendPromptMessage(message.prompt, message.modifiers)

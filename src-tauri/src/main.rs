@@ -98,7 +98,7 @@ async fn start_webui(webuipath: String, window: Window) -> String {
 
     let child = Command::new(py_cmd)
         .arg("-u")
-        .arg("webui.py")
+        .arg("launch.py")
         .current_dir(webuipath.clone())
         .env("COMMANDLINE_ARGS", "--xformers --deepdanbooru")
         .stdout(Stdio::piped())

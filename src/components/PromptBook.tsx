@@ -46,12 +46,12 @@ export function PromptBook() {
         <>
           {prompt && !prompts.includes(prompt) && (
             <button
-              className="flex flex-row justify-between items-center w-full border border-white/10 hover:border-white/20 border-dashed hover:text-white duration-150 rounded"
+              className="flex flex-row justify-between items-center w-full border border-white/10 hover:border-white/20 border-dashed duration-150 rounded"
               onClick={() => {
                 addPrompt(prompt)
               }}
             >
-              <p className="text-white/75 text-center p-2 w-full text-sm font-semibold flex flex-row items-center justify-center gap-2">
+              <p className="text-center p-2 w-full text-sm font-semibold flex flex-row items-center justify-center gap-2">
                 Save Current prompt <Plus className="w-4 h-4" />
               </p>
             </button>
@@ -59,7 +59,7 @@ export function PromptBook() {
           {prompts.map((prompt, i) => (
             <button
               key={prompt}
-              className="flex flex-row justify-between group relative text-white/75 hover:text-white items-center border-b last-of-type:border-none pb-2 last-of-type:pb-0 border-white/10 w-full"
+              className="flex flex-row justify-between group relative items-center border-b last-of-type:border-none pb-2 last-of-type:pb-0 border-white/10 w-full"
               onClick={() => {
                 setPrompt(prompt)
                 setOpen(false)
@@ -84,13 +84,13 @@ export function PromptBook() {
         <div className="w-full h-full flex justify-center grow items-center">
           {prompt ? (
             <button
-              className="text-white text-sm font-semibold border border-white/10 hover:border-white/25 duration-200 p-2 px-3 rounded-lg"
+              className="text-sm font-semibold border border-white/10 hover:border-white/25 duration-200 p-2 px-3 rounded-lg"
               onClick={() => addPrompt(prompt)}
             >
               Save current prompt
             </button>
           ) : (
-            <p className="text-white text-sm font-semibold">No prompts saved</p>
+            <p className="text-sm font-semibold">No prompts saved</p>
           )}
         </div>
       )}

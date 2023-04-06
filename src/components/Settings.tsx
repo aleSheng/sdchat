@@ -12,7 +12,7 @@ export function Settings() {
 
   return (
     <div
-      className={`absolute bottom-[3.75rem] duration-200 flex flex-col gap-4 p-3 w-80 bg-settingsPanel border border-chatbox rounded-lg drop-shadow-md ${
+      className={`absolute bottom-[3.75rem] duration-200 flex flex-col gap-4 p-3 w-80 bg-base-300 border border-base-100 rounded-lg drop-shadow-md ${
         open
           ? "block right-[0.75rem] lg:right-[0.5rem]"
           : "hidden opacity-0 right-[0.75rem]"
@@ -20,7 +20,7 @@ export function Settings() {
     >
       <div className="flex flex-col gap-1">
         <div className="flex flex-row justify-between">
-          <h1 className="text-white text-sm font-semibold">Model</h1>
+          <h1 className="text-sm font-semibold">Model</h1>
         </div>
         <div className="flex flex-row gap-2 p-1 rounded-lg bg-white/5 border border-white/10 w-fit">
           {["1.5", "2.1", "2.1 large", "anime"].map((model) => (
@@ -35,8 +35,8 @@ export function Settings() {
                   : model === "2.1 large"
                   ? "stable-diffusion-768-v2-1"
                   : "anything-v3.0")
-                  ? "text-white"
-                  : "hover:text-white text-white/75"
+                  ? "text-neutral "
+                  : "hover:text-neutral  text-neutral/75"
               }`}
               onClick={() => {
                 setSettings({
@@ -84,8 +84,8 @@ export function Settings() {
 
       <div className="flex flex-col gap-1">
         <div className="flex flex-row justify-between">
-          <h1 className="text-white text-sm font-semibold">Size</h1>
-          <p className="text-white/50 text-sm">
+          <h1 className="text-sm font-semibold">Size</h1>
+          <p className="text-sm">
             {settings.width}x{settings.height}
           </p>
         </div>
@@ -108,8 +108,8 @@ export function Settings() {
 
       <div className="flex flex-col gap-1">
         <div className="flex flex-row justify-between">
-          <h1 className="text-white text-sm font-semibold">Image Count</h1>
-          <p className="text-white/50 text-sm">{settings.count}</p>
+          <h1 className="text-sm font-semibold">Image Count</h1>
+          <p className="text-sm">{settings.count}</p>
         </div>
         <input
           type="range"
@@ -129,8 +129,8 @@ export function Settings() {
 
       <div className="flex flex-col gap-1">
         <div className="flex flex-row justify-between">
-          <h1 className="text-white text-sm font-semibold">Steps</h1>
-          <p className="text-white/50 text-sm">{settings.steps}</p>
+          <h1 className=" text-sm font-semibold">Steps</h1>
+          <p className="text-sm">{settings.steps}</p>
         </div>
         <input
           type="range"
@@ -150,8 +150,8 @@ export function Settings() {
 
       <div className="flex flex-col gap-1">
         <div className="flex flex-row justify-between">
-          <h1 className="text-white text-sm font-semibold">CFG Scale</h1>
-          <p className="text-white/50 text-sm">{settings.scale}</p>
+          <h1 className="text-sm font-semibold">CFG Scale</h1>
+          <p className="text-sm">{settings.scale}</p>
         </div>
         <input
           type="range"
@@ -179,8 +179,8 @@ export function Settings() {
         }}
       >
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-white text-sm font-semibold">Prompt Magic</h1>
-          <p className="text-white/50 text-[0.65rem]">
+          <h1 className="text-sm font-semibold">Prompt Magic</h1>
+          <p className="text-[0.65rem]">
             Adds modifiers and negative prompts to your generations
           </p>
         </div>
