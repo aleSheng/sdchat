@@ -71,39 +71,22 @@ const Home: NextPage = () => {
 
   const onSelectDirClick = () => {
     void (async () => {
-      const resourcePath = await resolveResource("resources/A1111sdwebui/").catch(
-        (e) => {
-          console.log(e)
-        },
-      )
-      if (resourcePath === undefined) {
-        return
-      }
-      // resolveResource returns a path with a prefix of "\\?\" which is not supported by nodejs
-      const folderPath = resourcePath.replace("\\\\?\\", "")
-
-      console.log(folderPath)
-      store.setSettings({
-        ...store.settings,
-        work_folder: folderPath,
-      })
-
       // Open a selection dialog for directories
-      // const selected = await open({
-      //   directory: true,
-      //   multiple: false,
-      //   defaultPath: "",
-      // })
-      // if (Array.isArray(selected)) {
-      //   // user selected multiple directories
-      // } else if (selected === null) {
-      //   // user cancelled the selection
-      // } else {
-      //   store.setSettings({
-      //     ...store.settings,
-      //     work_folder: selected,
-      //   })
-      // }
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        defaultPath: "",
+      })
+      if (Array.isArray(selected)) {
+        // user selected multiple directories
+      } else if (selected === null) {
+        // user cancelled the selection
+      } else {
+        store.setSettings({
+          ...store.settings,
+          work_folder: selected,
+        })
+      }
     })()
   }
 

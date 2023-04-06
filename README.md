@@ -1,6 +1,6 @@
-# SD Desk by YzLab
+# Stable Diffusion Chat
 
-SD Desk is a helper app for stable diffusion. It's created from Tauri + Next.js Template.
+SD Chat is a helper app for stable diffusion and ChatGPT. It's created from Tauri + Next.js Template.
 
 ## 注意事项
 

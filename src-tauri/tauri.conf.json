@@ -82,7 +82,7 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": ["resources/A1111sdwebui/**/*", "resources/*"],
+      "resources": ["resources/*"],
       "shortDescription": "",
       "targets": "all",
       "windows": {
