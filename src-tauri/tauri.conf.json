@@ -7,7 +7,7 @@
     "distDir": "../out"
   },
   "package": {
-    "productName": "sd-desk",
+    "productName": "sdchat",
     "version": "0.1.0"
   },
   "tauri": {
@@ -101,7 +101,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "SD Desk by YzLab",
+        "title": "SD Chat",
         "width": 1440,
         "height": 800
       }
