@@ -5,26 +5,18 @@ import { open } from "@/lib/dialog"
 import { StoreType } from "@/lib/store"
 interface StartViewProps {
   store: StoreType
-  running: boolean
   output: string
   downloading: boolean
   downloadingFile: string
   downloadProgress: number
-  onSelectDirClick: () => void
-  onStartClick: () => void
-  onInitClick: () => void
 }
 
 export const StartView: React.FC<StartViewProps> = ({
   store,
-  running,
   output,
   downloading,
   downloadingFile,
   downloadProgress,
-  onSelectDirClick,
-  onInitClick,
-  onStartClick,
 }: StartViewProps) => {
   const goToPythonDownload = () => {
     void openLink("https://www.python.org/downloads/")
@@ -120,47 +112,8 @@ export const StartView: React.FC<StartViewProps> = ({
           )}
         </div>
       </div>
-      <div className="container m-4 flex justify-center">
-        <div className="btn-group">
-          <button onClick={onSelectDirClick} className="btn btn-lg btn-outline">
-            {store.settings.work_folder || "Start by selecting a folder"}
-          </button>
-          {running ? (
-            <>
-              <button className="btn btn-lg btn-primary loading" disabled>
-                Running
-              </button>
-              <button className="btn btn-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={onInitClick} className="btn btn-lg btn-secondary">
-                Init
-              </button>
-              <button onClick={onStartClick} className="btn btn-lg btn-primary">
-                Start
-              </button>
-            </>
-          )}
-        </div>
-      </div>
 
-      <div className="card w-full bg-base-100 shadow-xl">
+      <div className="card w-full bg-base-100 shadow-xl mt-2">
         <div className="card-body">
           <h2 className="card-title">Output:</h2>
           {downloading && (

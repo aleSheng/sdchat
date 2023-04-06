@@ -12,7 +12,7 @@ export function Settings() {
 
   return (
     <div
-      className={`absolute bottom-[3.75rem] duration-200 flex flex-col gap-4 p-3 w-80 bg-base-300 border border-base-100 rounded-lg drop-shadow-md ${
+      className={`absolute bottom-[3.75rem] duration-200 flex flex-col gap-4 p-3 w-80 bg-base-100 border border-base-100 rounded-lg drop-shadow-md ${
         open
           ? "block right-[0.75rem] lg:right-[0.5rem]"
           : "hidden opacity-0 right-[0.75rem]"
@@ -189,7 +189,7 @@ export function Settings() {
             <Check
               strokeWidth={4}
               size={20}
-              className="absolute p-0.5 pointer-events-none inset-0 mx-auto my-auto text-settingsPanel"
+              className="absolute p-0.5 pointer-events-none inset-0 mx-auto my-auto"
             />
           )}
           <input
