@@ -73,7 +73,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.yzlab.sddesk",
+      "identifier": "com.sdchat.sdchat",
       "longDescription": "",
       "macOS": {
         "entitlements": null,

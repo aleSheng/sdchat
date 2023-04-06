@@ -1,11 +1,11 @@
 [package]
-name = "sd-desk"
+name = "sdchat"
 version = "0.1.0"
-description = "A Tauri App for Stable Diffusion"
+description = "A Tauri App for Stable Diffusion and GPT"
 authors = ["ale"]
 license = ""
 repository = ""
-default-run = "sd-desk"
+default-run = "sdchat"
 edition = "2021"
 rust-version = "1.66"
 
