@@ -60,16 +60,29 @@ export const StartView: React.FC<StartViewProps> = ({
           <div className="stat-title">System Info</div>
           <div className="stat-value">{store.systemInfo.archName}</div>
           <div className="stat-desc">{store.systemInfo.platformName}</div>
+          {store.systemInfo.archName === "x86_64" ? (
+            <button className="btn btn-sm btn-success">Good</button>
+          ) : (
+            <button className="btn btn-sm btn-error">Not enough</button>
+          )}
         </div>
         <div className="stat">
           <div className="stat-title">GPU Memory</div>
           <div className="stat-value">{store.systemInfo.gpuMemory}GB</div>
           <div className="stat-desc">{store.systemInfo.gpuName}</div>
+          {store.systemInfo.gpuMemory >= 8 ? (
+            <button className="btn btn-sm btn-success">Good</button>
+          ) : (
+            <button className="btn btn-sm btn-error">Not enough</button>
+          )}
         </div>
         <div className="stat">
           <div className="stat-title">CUDA Version</div>
           <div className="stat-value">{store.systemInfo.cudaVersion}</div>
-          {store.systemInfo.cudaVersion && store.systemInfo.cudaVersion < 11 && (
+          <div className="stat-desc">--</div>
+          {store.systemInfo.cudaVersion && store.systemInfo.cudaVersion >= 11 ? (
+            <button className="btn btn-sm btn-success">Good</button>
+          ) : (
             <div className="stat-actions">
               <button className="btn btn-sm btn-error">Get the cudatoolkit</button>
             </div>
@@ -78,8 +91,10 @@ export const StartView: React.FC<StartViewProps> = ({
         <div className="stat">
           <div className="stat-title">Python Version</div>
           <div className="stat-value">{store.python_version}</div>
-          <div className="stat-desc">{store.settings.python_path}</div>
-          {satisfies(store.python_version || "0.0.0", "^3.10.0") || (
+          <div className="stat-desc">{store.settings.python_path || "--"}</div>
+          {satisfies(store.python_version || "0.0.0", "^3.10.0") ? (
+            <button className="btn btn-sm btn-success">Good</button>
+          ) : (
             <div className="stat-actions">
               <button className="btn btn-sm btn-error" onClick={getPythonLocation}>
                 Locate python
@@ -93,7 +108,10 @@ export const StartView: React.FC<StartViewProps> = ({
         <div className="stat">
           <div className="stat-title">Git Version</div>
           <div className="stat-value">{store.git_version}</div>
-          {Boolean(store.git_version) || (
+          <div className="stat-desc">--</div>
+          {store.git_version ? (
+            <button className="btn btn-sm btn-success">Good</button>
+          ) : (
             <div className="stat-actions">
               <button className="btn btn-sm btn-error" onClick={goToGitDownload}>
                 Get the git

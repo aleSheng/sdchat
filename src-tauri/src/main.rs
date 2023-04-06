@@ -135,14 +135,14 @@ async fn init_webui(webuipath: String, window: Window) -> Result<String, String>
         window.emit("stdout", Payload {message: output_str}).unwrap();
     }
 
-    // pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+    // pip config set global.index-url http://mirrors.cloud.tencent.com/pypi/simple
     // update the pip source config
     let pip_config = format!("{}\\venv\\Scripts\\pip.exe", webuipath.clone()); 
     let pip_config_output = Command::new(pip_config)
         .arg("config")
         .arg("set")
         .arg("global.index-url")
-        .arg("https://pypi.tuna.tsinghua.edu.cn/simple")
+        .arg("http://mirrors.cloud.tencent.com/pypi/simple")
         .output()
         .expect("failed to execute pip config command");
     let pip_config_output = String::from_utf8(pip_config_output.stdout)
@@ -152,8 +152,8 @@ async fn init_webui(webuipath: String, window: Window) -> Result<String, String>
     let torch_whl_dir = format!("{}\\torch_whl", webuipath.clone());
     let torch_whl_file = "torch-1.13.1+cu117-cp310-cp310-win_amd64.whl".to_string();
     let torchvision_whl_file = "torchvision-0.14.2+cu117-cp310-cp310-win_amd64.whl".to_string();
-    let torch_whl_download_url = "https://download.pytorch.org/whl/cu117/torch-1.13.1%2Bcu117-cp310-cp310-win_amd64.whl".to_string();
-    let torchvision_whl_download_url = "https://download.pytorch.org/whl/cu117/torchvision-0.14.2%2Bcu117-cp310-cp310-win_amd64.whl".to_string();
+    let torch_whl_download_url = "https://download.pytorch.org/whl/cu117/torch-2.0.0%2Bcu117-cp310-cp310-win_amd64.whl".to_string();
+    let torchvision_whl_download_url = "https://download.pytorch.org/whl/cu117/torchvision-0.15.1%2Bcu117-cp310-cp310-win_amd64.whl".to_string();
 
     //check if torch is installed
     let torch_installed = funcs::check_if_python_package_installed(webuipath.clone(),"torch".to_string()).await;
