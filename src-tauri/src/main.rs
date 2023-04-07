@@ -100,7 +100,7 @@ async fn start_webui(webuipath: String, window: Window) -> String {
         .arg("-u")
         .arg("launch.py")
         .current_dir(webuipath.clone())
-        .env("COMMANDLINE_ARGS", "--xformers --deepdanbooru")
+        .env("COMMANDLINE_ARGS", "--xformers --deepdanbooru --api")
         .stdout(Stdio::piped())
         .spawn()
         .unwrap();
@@ -142,7 +142,7 @@ async fn init_webui(webuipath: String, window: Window) -> Result<String, String>
         .arg("config")
         .arg("set")
         .arg("global.index-url")
-        .arg("http://mirrors.cloud.tencent.com/pypi/simple")
+        .arg("https://mirrors.cloud.tencent.com/pypi/simple")
         .output()
         .expect("failed to execute pip config command");
     let pip_config_output = String::from_utf8(pip_config_output.stdout)

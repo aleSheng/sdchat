@@ -40,7 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ setMenu }) => {
   })
 
   return (
-    <ul className="menu w-48 p-4 bg-base-200 text-base-content">
+    <ul className="menu w-48 bg-base-200 text-base-content">
       {MenusData.map((item) => (
         <li
           key={item.key}

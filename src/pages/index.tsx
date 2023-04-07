@@ -17,6 +17,7 @@ import {
 } from "@/components/Sidebar"
 import ChatView from "@/containers/ChatView"
 import { ConfigView } from "@/containers/ConfigView"
+import { ModelsView } from "@/containers/ModelsView"
 import { StartView } from "@/containers/StartView"
 import { useGlobalShortcut } from "@/hooks/tauri/shortcuts"
 import { listen, openWebview } from "@/lib/api"
@@ -227,11 +228,7 @@ const Home: NextPage = () => {
             ></StartView>
           )}
           {menu === ChatViewMenu.key && <ChatView />}
-          {menu === ModelsMenu.key && (
-            <button onClick={onSelectDirClick} className="btn btn-lg">
-              {store.settings.work_folder}
-            </button>
-          )}
+          {menu === ModelsMenu.key && <ModelsView />}
           {menu === PromptsMenu.key && (
             <button onClick={onSelectDirClick} className="btn btn-lg">
               {store.settings.work_folder}
