@@ -125,10 +125,14 @@ const Home: NextPage = () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       setShellOutput(String(data.payload.message))
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      const url = data.payload.message.match(regex)[0]
-      if (url) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        openWebui(url)
+      const is_url_line = data.payload.message.indexOf("Running on local URL:")
+      if (is_url_line >= 0) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        const url = data.payload.message.match(regex)[0]
+        if (url) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+          openWebui(url)
+        }
       }
     })
 

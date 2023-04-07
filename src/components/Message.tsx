@@ -9,7 +9,7 @@ import { PromptBook } from "./PromptBook"
 import { PromptEngine } from "./PromptEngine"
 import { Settings } from "./Settings"
 
-const webui_localhost = "http://localhost:3000"
+const webui_localhost = "http://127.0.0.1:7860"
 
 export function Message({ id }: { id: string }) {
   const [message, editMessage] = MessageList.useMessage(id)
@@ -269,7 +269,7 @@ export namespace Message {
           }),
         })
       } else {
-        res = await fetch(`${webui_localhost}/image`, {
+        res = await fetch(`${webui_localhost}/sdapi/v1/txt2img`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

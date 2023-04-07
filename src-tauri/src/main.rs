@@ -100,7 +100,7 @@ async fn start_webui(webuipath: String, window: Window) -> String {
         .arg("-u")
         .arg("launch.py")
         .current_dir(webuipath.clone())
-        .env("COMMANDLINE_ARGS", "--xformers --deepdanbooru --api")
+        .env("COMMANDLINE_ARGS", "--xformers --deepdanbooru --api --cors-allow-origins=http://localhost:3000")
         .stdout(Stdio::piped())
         .spawn()
         .unwrap();
