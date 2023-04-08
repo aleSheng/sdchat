@@ -32,7 +32,7 @@ const Home: NextPage = () => {
   const [menu, setMenu] = useState(0)
 
   const [running, setRunning] = useState<boolean>(false)
-  const [shellOutput, setShellOutput] = useState<string>("")
+  const [shellOutput, setShellOutput] = useState<string[]>([])
 
   const [downloading, setDownloading] = useState<boolean>(false)
   const [downloadingFile, setDownloadingFile] = useState<string>("")
@@ -85,8 +85,11 @@ const Home: NextPage = () => {
     }
     setRunning(true)
     const unlisten = listen("stdout", (data: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      setShellOutput(String(data.payload.message))
+      // update the shellOutput state
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const line = data.payload.message
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return
+      setShellOutput((prev) => [...prev, line])
     })
     const unlisten_download = listen("single_file_download", (data: any) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -122,10 +125,12 @@ const Home: NextPage = () => {
     }
     setRunning(true)
     const unlisten = listen("stdout", (data: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      setShellOutput(String(data.payload.message))
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       const is_url_line = data.payload.message.indexOf("Running on local URL:")
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const line = data.payload.message
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return
+      setShellOutput((prev) => [...prev, line])
       if (is_url_line >= 0) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const url = data.payload.message.match(regex)[0]
@@ -225,7 +230,7 @@ const Home: NextPage = () => {
           {menu === QuickStartMenu.key && (
             <StartView
               store={store}
-              output={shellOutput}
+              output_lines={shellOutput}
               downloading={downloading}
               downloadingFile={downloadingFile}
               downloadProgress={downloadProgress}

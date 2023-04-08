@@ -1,6 +1,6 @@
 # Stable Diffusion Chat
 
-SD Chat is a helper app for stable diffusion and ChatGPT. It's created from Tauri + Next.js Template.
+SD Chat is a helper app for stable diffusion and LLM on your own computer. It's created from Tauri + Next.js Template.
 
 ## 注意事项
 

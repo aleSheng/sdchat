@@ -5,7 +5,7 @@ import { open } from "@/lib/dialog"
 import { StoreType } from "@/lib/store"
 interface StartViewProps {
   store: StoreType
-  output: string
+  output_lines: string[]
   downloading: boolean
   downloadingFile: string
   downloadProgress: number
@@ -13,7 +13,7 @@ interface StartViewProps {
 
 export const StartView: React.FC<StartViewProps> = ({
   store,
-  output,
+  output_lines,
   downloading,
   downloadingFile,
   downloadProgress,
@@ -112,22 +112,23 @@ export const StartView: React.FC<StartViewProps> = ({
           )}
         </div>
       </div>
-
-      <div className="card w-full bg-base-100 shadow-xl mt-2">
-        <div className="card-body">
-          <h2 className="card-title">Output:</h2>
-          {downloading && (
-            <div>
-              <p>Downloading {downloadingFile}</p>
-              <progress
-                className="progress progress-primary w-56"
-                value={downloadProgress}
-                max="100"
-              ></progress>
-            </div>
-          )}
-          <p>{output || "Output goes here"}</p>
+      {downloading && (
+        <div>
+          <p>Downloading {downloadingFile}</p>
+          <progress
+            className="progress progress-primary w-56"
+            value={downloadProgress}
+            max="100"
+          ></progress>
         </div>
+      )}
+      <div className="mockup-code max-h-[30rem] overflow-y-auto">
+        {output_lines.map((line) => (
+          // eslint-disable-next-line react/jsx-key
+          <pre data-prefix=">" className="text-warning">
+            <code>{line}</code>
+          </pre>
+        ))}
       </div>
     </>
   )
