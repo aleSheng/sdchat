@@ -101,13 +101,13 @@ export const Message = ({ message }: { message: MessageType }) => {
                   if (selectedImage === -1) {
                     message.images.forEach((image, i) =>
                       saveImage(
-                        image.image,
+                        image,
                         `${message.prompt.replace(/[^a-zA-Z0-9]/g, "_")}-${i}`,
                       ),
                     )
                   } else {
                     saveImage(
-                      message.images[selectedImage].image,
+                      message.images[selectedImage],
                       message.prompt.replace(/[^a-zA-Z0-9]/g, "_"),
                     )
                   }
