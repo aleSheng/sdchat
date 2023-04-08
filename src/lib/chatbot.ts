@@ -24,16 +24,11 @@ export type MessageType = {
   modifiers: string | undefined
   loading: boolean
   error: string | null
-  images: Artifact[]
+  images: string[]
   settings: Settings | null
   rating: number
 }
 
-export type Artifact = {
-  image: string
-  seed: number
-  id: string
-}
 export type ChatBarType = {
   prompt: string
   setPrompt: (prompt: string) => void
@@ -201,8 +196,8 @@ export const sendPromptMessage = async (
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const data = await res.json()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  newMsg.images = data
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+  newMsg.images = data.images
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (data.length === 0) {

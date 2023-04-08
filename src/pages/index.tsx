@@ -15,7 +15,7 @@ import {
   QuickStartMenu,
   Sidebar,
 } from "@/components/Sidebar"
-import ChatView from "@/containers/ChatView"
+import { ChatView } from "@/containers/ChatView"
 import { ConfigView } from "@/containers/ConfigView"
 import { ModelsView } from "@/containers/ModelsView"
 import { StartView } from "@/containers/StartView"

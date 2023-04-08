@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 import React from "react"
 
-import { Artifact, Message } from "./Message"
+import { MessageType } from "@/lib/chatbot"
 
 export function Image({
   image,
@@ -10,10 +10,10 @@ export function Image({
   message,
   i,
 }: {
-  image: Artifact
+  image: string
   selectedImage: number
   setSelectedImage(i: number): void
-  message: Message
+  message: MessageType
   i: number
 }) {
   const [loaded, setLoaded] = React.useState(false)
@@ -22,7 +22,8 @@ export function Image({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       key={i}
-      src={image.image}
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      src={`data:image/bmp;base64,${image}`}
       alt="Generated image"
       className={`rounded mt-2 duration-300 cursor-pointer ${
         loaded ? "opacity-100 hover:opacity-75" : "opacity-0"
