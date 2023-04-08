@@ -1,11 +1,10 @@
 import { Plus, Trash2, X } from "lucide-react"
 import React from "react"
-import create from "zustand"
 
-import { ChatBar } from "./ChatBar"
+import { useChatBar, usePromptBook } from "@/lib/chatbot"
 
 export function PromptBook() {
-  const [prompts, addPrompt, deletePrompt, setPrompts, open, setOpen] = PromptBook.use(
+  const [prompts, addPrompt, deletePrompt, setPrompts, open, setOpen] = usePromptBook(
     (state) => [
       state.prompts,
       state.addPrompt,
@@ -16,7 +15,7 @@ export function PromptBook() {
     ],
   )
 
-  const [prompt, setPrompt] = ChatBar.use((state) => [state.prompt, state.setPrompt])
+  const [prompt, setPrompt] = useChatBar((state) => [state.prompt, state.setPrompt])
 
   React.useEffect(() => {
     // load from local storage
@@ -27,7 +26,7 @@ export function PromptBook() {
     }
 
     // write serializer
-    const unsub = PromptBook.use.subscribe((newPrompts) => {
+    const unsub = usePromptBook.subscribe((newPrompts) => {
       localStorage.setItem("prompts", JSON.stringify(newPrompts.prompts))
     })
 
@@ -96,33 +95,4 @@ export function PromptBook() {
       )}
     </div>
   )
-}
-
-export type PromptBook = {
-  prompts: string[]
-  addPrompt: (prompt: string) => void
-  deletePrompt: (prompt: string) => void
-  setPrompts: (prompts: string[]) => void
-
-  isOpen: boolean
-  setOpen: (isOpen: boolean) => void
-}
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace PromptBook {
-  export const use = create<PromptBook>()((set) => ({
-    prompts: [],
-    addPrompt: (prompt: string) =>
-      set((state: PromptBook) => ({
-        prompts: [...state.prompts, prompt],
-      })),
-    deletePrompt: (prompt: string) =>
-      set((state: PromptBook) => ({
-        prompts: state.prompts.filter((p) => p !== prompt),
-      })),
-    setPrompts: (prompts: string[]) => set((_state: PromptBook) => ({ prompts })),
-
-    isOpen: false,
-    setOpen: (isOpen: boolean) => set((_state: PromptBook) => ({ isOpen })),
-  }))
 }

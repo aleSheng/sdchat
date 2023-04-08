@@ -2,8 +2,10 @@ import React from "react"
 
 import { ChatBar } from "@/components/ChatBar"
 import { MessageList } from "@/components/MessageList"
+import { useWebuiUrl } from "@/lib/chatbot"
 
-export default function ChatView() {
+export const ChatView = ({ webui_url }: { webui_url: string }) => {
+  useWebuiUrl.getState().setWebuiUrl(webui_url)
   return (
     <>
       <MessageList />

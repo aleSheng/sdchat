@@ -33,6 +33,7 @@ const Home: NextPage = () => {
 
   const [running, setRunning] = useState<boolean>(false)
   const [shellOutput, setShellOutput] = useState<string[]>([])
+  const [webui_url, setWebuiUrl] = useState<string>("")
 
   const [downloading, setDownloading] = useState<boolean>(false)
   const [downloadingFile, setDownloadingFile] = useState<string>("")
@@ -85,7 +86,6 @@ const Home: NextPage = () => {
     }
     setRunning(true)
     const unlisten = listen("stdout", (data: any) => {
-      // update the shellOutput state
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const line = data.payload.message
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return
@@ -125,16 +125,17 @@ const Home: NextPage = () => {
     }
     setRunning(true)
     const unlisten = listen("stdout", (data: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      const is_url_line = data.payload.message.indexOf("Running on local URL:")
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const line = data.payload.message
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+      const is_url_line = line.indexOf("Running on local URL:")
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return
       setShellOutput((prev) => [...prev, line])
       if (is_url_line >= 0) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const url = data.payload.message.match(regex)[0]
+        const url: string = line.match(regex)[0]
         if (url) {
+          setWebuiUrl(url)
           // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           openWebui(url)
         }
@@ -236,7 +237,7 @@ const Home: NextPage = () => {
               downloadProgress={downloadProgress}
             ></StartView>
           )}
-          {menu === ChatViewMenu.key && <ChatView />}
+          {menu === ChatViewMenu.key && <ChatView webui_url={webui_url} />}
           {menu === ModelsMenu.key && <ModelsView />}
           {menu === PromptsMenu.key && (
             <button onClick={onSelectDirClick} className="btn btn-lg">

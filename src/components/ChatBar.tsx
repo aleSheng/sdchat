@@ -1,26 +1,33 @@
 import { Album, Send, Settings2 } from "lucide-react"
-import create from "zustand"
 
-import { Message } from "./Message"
-import { MessageList } from "./MessageList"
+import {
+  sendPromptMessage,
+  useChatBar,
+  useMessageList,
+  usePromptBook,
+  useSettings,
+  useWebuiUrl,
+} from "@/lib/chatbot"
+
 import { PromptBook } from "./PromptBook"
-import { PromptEngine } from "./PromptEngine"
+import { makePrompt } from "./PromptEngine"
 import { Settings } from "./Settings"
 
-export function ChatBar() {
-  const [prompt, setPrompt] = ChatBar.use((state) => [state.prompt, state.setPrompt])
+export const ChatBar = () => {
+  const [prompt, setPrompt] = useChatBar((state) => [state.prompt, state.setPrompt])
+  const [url] = useWebuiUrl((state) => [state.url, state.setWebuiUrl])
 
-  const [promptBookOpen, setPromptBookOpen] = PromptBook.use((state) => [
+  const [promptBookOpen, setPromptBookOpen] = usePromptBook((state) => [
     state.isOpen,
     state.setOpen,
   ])
 
-  const [settingsOpen, setSettingsOpen] = Settings.use((state) => [
+  const [settingsOpen, setSettingsOpen] = useSettings((state) => [
     state.isOpen,
     state.setOpen,
   ])
 
-  const history = MessageList.use((state) => state.messages)
+  const history = useMessageList((state) => state.messages)
 
   return (
     <>
@@ -40,7 +47,7 @@ export function ChatBar() {
             {"Don't know what to say? "}{" "}
             <span
               className="text-blue-400 hover:underline cursor-pointer"
-              onClick={() => setPrompt(PromptEngine.makePrompt())}
+              onClick={() => setPrompt(makePrompt())}
             >
               Surprise Me!
             </span>
@@ -65,7 +72,7 @@ export function ChatBar() {
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                void Message.sendPromptMessage(prompt)
+                void sendPromptMessage(url, prompt)
                 e.preventDefault()
               } else if (
                 e.key === "ArrowUp" &&
@@ -73,6 +80,7 @@ export function ChatBar() {
                 Object.keys(history).length > 0
               ) {
                 setPrompt(
+                  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
                   Object.values(history).sort((a, b) => b.timestamp - a.timestamp)[0]
                     .prompt,
                 )
@@ -121,7 +129,7 @@ export function ChatBar() {
             <button
               className={String(prompt ? "cursor-pointer" : "cursor-default")}
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onClick={() => Message.sendPromptMessage(prompt)}
+              onClick={() => sendPromptMessage(url, prompt)}
             >
               <Send
                 className={`text-accent rotate-45 ${
@@ -136,17 +144,4 @@ export function ChatBar() {
       </div>
     </>
   )
-}
-
-export type ChatBar = {
-  prompt: string
-  setPrompt: (prompt: string) => void
-}
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace ChatBar {
-  export const use = create<ChatBar>()((set) => ({
-    prompt: "",
-    setPrompt: (prompt: string) => set((_state: ChatBar) => ({ prompt })),
-  }))
 }

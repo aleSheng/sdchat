@@ -1,10 +1,11 @@
 /* eslint-disable radix */
 import { AnimatePresence, motion } from "framer-motion"
 import { Check } from "lucide-react"
-import create from "zustand"
+
+import { useSettings } from "@/lib/chatbot"
 
 export function Settings() {
-  const [open, settings, setSettings] = Settings.use((state) => [
+  const [open, settings, setSettings] = useSettings((state) => [
     state.isOpen,
     state.settings,
     state.setSettings,
@@ -209,48 +210,4 @@ export function Settings() {
       </div>
     </div>
   )
-}
-
-export type Settings = {
-  model:
-    | "stable-diffusion-v1-5"
-    | "stable-diffusion-512-v2-1"
-    | "stable-diffusion-768-v2-1"
-    | "anything-v3.0"
-  width: number
-  height: number
-  count: number
-  steps: number
-  scale: number
-  modify: boolean
-}
-
-export type SettingsState = {
-  settings: Settings
-  setSettings: (settings: Settings) => void
-
-  isOpen: boolean
-  setOpen: (isOpen: boolean) => void
-}
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace Settings {
-  export const use = create<SettingsState>()((set) => ({
-    settings: {
-      model: "stable-diffusion-v1-5",
-      width: 512,
-      height: 512,
-      count: 4,
-      steps: 30,
-      scale: 7,
-      modify: true,
-    } as Settings,
-    setSettings: (settings: Settings) =>
-      set((state: SettingsState) => ({
-        settings: { ...state.settings, ...settings },
-      })),
-
-    isOpen: false,
-    setOpen: (isOpen: boolean) => set((state: SettingsState) => ({ isOpen })),
-  }))
 }
