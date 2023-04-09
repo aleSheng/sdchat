@@ -94,20 +94,17 @@ async fn get_latest_image(dir_path: String) -> String {
 
 #[tauri::command]
 async fn kill_proc(pid: i32) -> String {
-    let os = std::env::consts::OS;
-    let output = if os.contains("windows") {
+    let output = if cfg!(target_os = "windows") {
         Command::new("taskkill")
-            .arg("/pid")
-            .arg(pid.to_string())
-            .arg("/f")
+            .args(["/pid", &pid.to_string(), "/T", "/F"])
             .output()
-            .expect("Failed to kill process")
+            .expect("Failed to kill process tree")
     } else {
         Command::new("kill")
             .arg("-9")
             .arg(pid.to_string())
             .output()
-            .expect("Failed to kill process")
+            .expect("Failed to kill process tree")
     };
     let output_str = String::from_utf8(output.stdout).unwrap();
     output_str
