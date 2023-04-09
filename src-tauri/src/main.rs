@@ -93,6 +93,27 @@ async fn get_latest_image(dir_path: String) -> String {
 }
 
 #[tauri::command]
+async fn kill_proc(pid: i32) -> String {
+    let os = std::env::consts::OS;
+    let output = if os.contains("windows") {
+        Command::new("taskkill")
+            .arg("/pid")
+            .arg(pid.to_string())
+            .arg("/f")
+            .output()
+            .expect("Failed to kill process")
+    } else {
+        Command::new("kill")
+            .arg("-9")
+            .arg(pid.to_string())
+            .output()
+            .expect("Failed to kill process")
+    };
+    let output_str = String::from_utf8(output.stdout).unwrap();
+    output_str
+}
+
+#[tauri::command]
 async fn start_webui(webuipath: String, window: Window) -> String {
     let py_cmd = format!("{}\\venv\\Scripts\\python.exe", webuipath.clone());
 
