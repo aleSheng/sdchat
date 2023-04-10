@@ -6,35 +6,44 @@ export const QuickStartMenu = {
   state: "active",
   desc: "One Click to start",
 }
-export const ChatViewMenu = {
+export const WebUIMenu = {
   key: 1,
+  name: "WebUI",
+  desc: "Open WebUI",
+}
+export const ChatViewMenu = {
+  key: 2,
   name: "Chat",
-  state: "",
   desc: "Chat with the sd",
 }
 export const ConfigMenu = {
-  key: 2,
+  key: 3,
   name: "Configuration",
-  state: "",
   desc: "A lot of configurations",
 }
 export const ModelsMenu = {
-  key: 3,
+  key: 4,
   name: "Models",
-  state: "",
   desc: "Model files",
 }
 export const PromptsMenu = {
-  key: 4,
+  key: 5,
   name: "Prompts",
-  state: "",
   desc: "Prompt collections",
 }
 interface SidebarProps {
+  menu: number
   setMenu: Dispatch<SetStateAction<number>>
 }
-export const Sidebar: React.FC<SidebarProps> = ({ setMenu }) => {
-  const MenusData = [QuickStartMenu, ChatViewMenu, ConfigMenu, ModelsMenu, PromptsMenu]
+export const Sidebar: React.FC<SidebarProps> = ({ menu, setMenu }) => {
+  const MenusData = [
+    QuickStartMenu,
+    WebUIMenu,
+    ChatViewMenu,
+    ConfigMenu,
+    ModelsMenu,
+    PromptsMenu,
+  ]
   MenusData.forEach((menu, index) => {
     menu.key = index
   })
@@ -45,12 +54,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ setMenu }) => {
         <li
           key={item.key}
           onClick={() => {
-            MenusData.forEach((m) => (m.state = ""))
-            MenusData[item.key].state = "active"
             setMenu(item.key)
           }}
         >
-          <a className={item.state}>{item.name}</a>
+          <a className={menu === item.key ? "active" : ""}>{item.name}</a>
         </li>
       ))}
       <select className="select m-4" data-choose-theme>

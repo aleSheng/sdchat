@@ -14,13 +14,15 @@ import {
   PromptsMenu,
   QuickStartMenu,
   Sidebar,
+  WebUIMenu,
 } from "@/components/Sidebar"
 import { ChatView } from "@/containers/ChatView"
 import { ConfigView } from "@/containers/ConfigView"
 import { ModelsView } from "@/containers/ModelsView"
 import { StartView } from "@/containers/StartView"
+import { WebUIView } from "@/containers/WebUIView"
 import { useGlobalShortcut } from "@/hooks/tauri/shortcuts"
-import { listen, openWebview } from "@/lib/api"
+import { listen } from "@/lib/api"
 import { open } from "@/lib/dialog"
 import useStore from "@/lib/store"
 
@@ -66,58 +68,20 @@ const Home: NextPage = () => {
     })()
   }
 
-  const openWebui = (url: string) => {
-    openWebview(
-      "WebUI",
-      { url: url },
-      () => {
-        //TODO
-      },
-      () => {
-        setErrorInfo("Error")
-      },
-    )
+  const onOpenWebUIClick = () => {
+    WebUIMenu.key !== menu && setMenu(WebUIMenu.key)
   }
 
-  const onInitWebuiClick = () => {
-    if (store.settings.work_folder === "") {
-      setErrorInfo("Please select a folder first")
-      return
-    }
-    setRunning(true)
-    const unlisten = listen("stdout", (data: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      const line = data.payload.message
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return
-      setShellOutput((prev) => [...prev, line])
-    })
-    const unlisten_download = listen("single_file_download", (data: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      const { progress, download_url } = data.payload
-      setDownloading(progress < 100)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      setDownloadProgress(progress)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      setDownloadingFile(download_url)
-    })
-    invoke<string>("init_webui", {
-      webuipath: store.settings.work_folder,
-    })
-      .then(async (value) => {
-        ;(await unlisten)()
-        ;(await unlisten_download)()
-        console.log(`start output:${value}`)
-        // setShellOutput(value)
-        setRunning(false)
+  const onStopWebuiClick = () => {
+    invoke<string>("stop_webui")
+      .then((value) => {
+        console.log(`stop webui:${value}`)
       })
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      .catch(async (err) => {
+      .catch((err) => {
         console.error(err)
-        ;(await unlisten)()
-        ;(await unlisten_download)()
-        setRunning(false)
       })
   }
+
   const onStartWebuiClick = () => {
     if (store.settings.work_folder === "") {
       setErrorInfo("Please select a folder first")
@@ -136,23 +100,33 @@ const Home: NextPage = () => {
         const url: string = line.match(regex)[0]
         if (url) {
           setWebuiUrl(url)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-          openWebui(url)
         }
       }
+    })
+    const unlisten_download = listen("single_file_download", (data: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const { progress, download_url } = data.payload
+      setDownloading(progress < 100)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      setDownloadProgress(progress)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      setDownloadingFile(download_url)
     })
 
     invoke<string>("start_webui", {
       webuipath: store.settings.work_folder,
     })
-      .then(async (value) => {
+      .then(async () => {
         ;(await unlisten)()
+        ;(await unlisten_download)()
         setRunning(false)
-        console.log(`start webui:${value}`)
+        setWebuiUrl("")
       })
       .catch(async (err) => {
         ;(await unlisten)()
+        ;(await unlisten_download)()
         setRunning(false)
+        setWebuiUrl("")
         console.error(err)
       })
   }
@@ -188,16 +162,19 @@ const Home: NextPage = () => {
               </svg>
             </label>
           </div>
-          <div className="flex-1 px-2 mx-2 btn-group">
+          <div className="flex-1 btn-group">
             <button onClick={onSelectDirClick} className="btn btn-lg btn-outline">
               {store.settings.work_folder || "Start by selecting a folder"}
             </button>
             {running ? (
               <>
-                <button className="btn btn-lg btn-primary loading" disabled>
-                  Running
-                </button>
-                <button className="btn btn-lg">
+                <button className="btn btn-lg btn-accent loading">Running</button>
+                {webui_url && (
+                  <button className="btn btn-lg btn-primary" onClick={onOpenWebUIClick}>
+                    Open WebUI
+                  </button>
+                )}
+                <button className="btn btn-lg" onClick={onStopWebuiClick}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-6 w-6"
@@ -216,9 +193,6 @@ const Home: NextPage = () => {
               </>
             ) : (
               <>
-                <button onClick={onInitWebuiClick} className="btn btn-lg btn-secondary">
-                  Init
-                </button>
                 <button onClick={onStartWebuiClick} className="btn btn-lg btn-primary">
                   Start
                 </button>
@@ -226,7 +200,7 @@ const Home: NextPage = () => {
             )}
           </div>
         </div>
-        <main className="flex flex-1 flex-col p-4 w-full">
+        <main className="flex flex-1 flex-col w-full">
           {menu === ConfigMenu.key && <ConfigView store={store} />}
           {menu === QuickStartMenu.key && (
             <StartView
@@ -237,6 +211,7 @@ const Home: NextPage = () => {
               downloadProgress={downloadProgress}
             ></StartView>
           )}
+          {menu === WebUIMenu.key && <WebUIView url={webui_url} />}
           {menu === ChatViewMenu.key && <ChatView webui_url={webui_url} />}
           {menu === ModelsMenu.key && <ModelsView />}
           {menu === PromptsMenu.key && (
@@ -248,7 +223,7 @@ const Home: NextPage = () => {
       </div>
       <div className="drawer-side">
         <label htmlFor="my-drawer" className="drawer-overlay"></label>
-        <Sidebar setMenu={setMenu}></Sidebar>
+        <Sidebar menu={menu} setMenu={setMenu}></Sidebar>
       </div>
 
       {errorInfo && (

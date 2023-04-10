@@ -47,7 +47,7 @@ export const StartView: React.FC<StartViewProps> = ({
 
   return (
     <>
-      <div className="stats shadow">
+      <div className="stats shadow mx-2">
         <div className="stat">
           <div className="stat-title">System Info</div>
           <div className="stat-value">{store.systemInfo.archName}</div>
@@ -68,6 +68,8 @@ export const StartView: React.FC<StartViewProps> = ({
             <button className="btn btn-sm btn-error">Not enough</button>
           )}
         </div>
+      </div>
+      <div className="stats shadow mx-2">
         <div className="stat">
           <div className="stat-title">CUDA Version</div>
           <div className="stat-value">{store.systemInfo.cudaVersion}</div>
@@ -122,13 +124,15 @@ export const StartView: React.FC<StartViewProps> = ({
           ></progress>
         </div>
       )}
-      <div className="mockup-code max-h-[30rem] overflow-y-auto">
-        {output_lines.map((line) => (
-          // eslint-disable-next-line react/jsx-key
-          <pre data-prefix=">" className="text-warning">
-            <code>{line}</code>
-          </pre>
-        ))}
+      <div className="mx-2">
+        <div className="mockup-code max-h-[20rem] overflow-y-auto">
+          {output_lines.map((line) => (
+            // eslint-disable-next-line react/jsx-key
+            <pre data-prefix=">" className="text-warning">
+              <code>{line}</code>
+            </pre>
+          ))}
+        </div>
       </div>
     </>
   )

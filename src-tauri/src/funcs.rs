@@ -1,8 +1,12 @@
-use std::{fs, fs::Metadata, process::{Command, Stdio}, time::SystemTime, io::{BufReader, BufRead}, path::Path};
-use tauri::regex::Regex;
+use std::{fs, fs::Metadata, process::{Command, Stdio}, time::SystemTime, io::{BufReader, BufRead}, path::Path, collections::HashMap, sync::Mutex};
+use tauri::{regex::Regex, State};
 use tauri::Window;
 
 use crate::Payload;
+
+pub struct Storage {
+    pub store: Mutex<HashMap<String, String>>,
+}
 
 // Get the latest image created in the output directory
 pub fn latest_image(dir_path: String) -> String {
@@ -203,61 +207,62 @@ pub async fn check_if_python_package_installed(webuipath: String, package: Strin
     }
 }
 
-pub async fn run_python_install_torch(webuipath: String, window: Window) -> String {
+pub async fn run_python_install_torch(webuipath: String, storage: &State<'_, Storage>, window: &Window) -> String {
     let args = "-u -m pip install .\\torch_whl\\torch-1.13.1+cu117-cp310-cp310-win_amd64.whl".split(" ").collect::<Vec<&str>>();
-    run_venv_py(webuipath, args, window).await
+    run_venv_py(webuipath, args, storage, window).await
 }
-pub async fn run_python_install_torchvision(webuipath: String, window: Window) -> String {
+pub async fn run_python_install_torchvision(webuipath: String, storage: &State<'_, Storage>, window: &Window) -> String {
     let args = "-u -m pip install .\\torch_whl\\torchvision-0.14.1+cu117-cp310-cp310-win_amd64.whl".split(" ").collect::<Vec<&str>>();
-    run_venv_py(webuipath, args, window).await
+    run_venv_py(webuipath, args, storage, window).await
 }
 
-pub async fn run_python_install_xformers(webuipath: String, window: Window) -> String {
+pub async fn run_python_install_xformers(webuipath: String, storage: &State<'_, Storage>, window: &Window) -> String {
     let args = "-u -m pip install -U -I --no-deps xformers".split(" ").collect::<Vec<&str>>();
-    run_venv_py(webuipath, args, window).await
+    run_venv_py(webuipath, args, storage, window).await
 }
 
-pub async fn run_python_install_codeformer(webuipath: String, window: Window) -> String {
+pub async fn run_python_install_codeformer(webuipath: String, storage: &State<'_, Storage>, window: &Window) -> String {
     let codeformer_requirment = format!("-u -m pip install -r {}\\repositories\\Codeformer\\requirements.txt", webuipath);
     let args = codeformer_requirment.split(" ").collect::<Vec<&str>>();
-    run_venv_py(webuipath, args, window).await
+    run_venv_py(webuipath, args, storage, window).await
 }
 
-pub async fn run_python_install_requirements(webuipath: String, window: Window) -> String {
+pub async fn run_python_install_requirements(webuipath: String, storage: &State<'_, Storage>, window: &Window) -> String {
     let args = "-u -m pip install -r requirements.txt".split(" ").collect::<Vec<&str>>();
-    run_venv_py(webuipath, args, window).await
+    run_venv_py(webuipath, args, storage, window).await
 }
 
-pub async fn run_python_install_gfpgan(webuipath: String, window: Window) -> String {
+pub async fn run_python_install_gfpgan(webuipath: String, storage: &State<'_, Storage>, window: &Window) -> String {
     let args = "-u -m pip install -e .\\repositories\\GFPGAN\\".split(" ").collect::<Vec<&str>>();
-    run_venv_py(webuipath, args, window).await
+    run_venv_py(webuipath, args, storage, window).await
 }
-pub async fn run_python_install_clip(webuipath: String, window: Window) -> String {
+pub async fn run_python_install_clip(webuipath: String, storage: &State<'_, Storage>, window: &Window) -> String {
     let args = "-u -m pip install -e .\\repositories\\CLIP\\".split(" ").collect::<Vec<&str>>();
-    run_venv_py(webuipath, args, window).await
+    run_venv_py(webuipath, args, storage, window).await
 }
-pub async fn run_python_install_openclip(webuipath: String, window: Window) -> String {
+pub async fn run_python_install_openclip(webuipath: String, storage: &State<'_, Storage>, window: &Window) -> String {
     let args = "-u -m pip install -e .\\repositories\\open_clip\\".split(" ").collect::<Vec<&str>>();
-    run_venv_py(webuipath, args, window).await
+    run_venv_py(webuipath, args, storage, window).await
 }
 
-pub async fn run_venv_py(webuipath: String, args: Vec<&str>, window: Window) -> String{
+pub async fn run_venv_py(webuipath: String, args: Vec<&str>, storage: &State<'_, Storage>, window: &Window) -> String{
     let cmd = format!("{}\\venv\\Scripts\\python.exe", webuipath.clone());
-    run_commands(webuipath, cmd, args, window).await
+    run_commands(webuipath, cmd, args, storage, window).await
 }
 /**
  * Run a command in a subprocess and emit the output to the UI
  */
-pub async fn run_commands(webuipath: String, cmd: String, args: Vec<&str>, window: Window) -> String {
+pub async fn run_commands(webuipath: String, cmd: String, args: Vec<&str>, storage: &State<'_, Storage>, window: &Window) -> String {
     let msg = format!("{} {}", cmd, args.clone().join("").to_string());
     window.emit("stdout", Payload {message: msg}).unwrap();
-    let output = std::process::Command::new(cmd)
+    let child = std::process::Command::new(cmd)
         .args(args)
         .current_dir(webuipath)
         .stdout(Stdio::piped())
         .spawn()
-        .expect("spawn error")
-        .stdout
+        .expect("spawn error");
+    storage.store.lock().unwrap().insert("pid".to_string(), child.id().to_string());
+    let output = child.stdout
         .expect("stdout error");
     
     BufReader::new(output)
@@ -273,4 +278,24 @@ pub async fn run_commands(webuipath: String, cmd: String, args: Vec<&str>, windo
 pub async fn check_if_file_exists(dir_path:String, file_path: String) -> bool {
     let path = Path::new(&dir_path).join(file_path);
     path.exists()
+}
+
+/**
+ * Kill a process tree
+ */
+pub async fn kill_proc(pid: String) -> String {
+    let output = if cfg!(target_os = "windows") {
+        Command::new("taskkill")
+            .args(["/pid", &pid.to_string(), "/T", "/F"])
+            .output()
+            .expect("Failed to kill process tree")
+    } else {
+        Command::new("kill")
+            .arg("-9")
+            .arg(pid)
+            .output()
+            .expect("Failed to kill process tree")
+    };
+    let output_str = String::from_utf8(output.stdout).expect("Failed to kill process tree");
+    output_str
 }

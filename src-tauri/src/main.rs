@@ -3,16 +3,19 @@
     windows_subsystem = "windows"
 )]
 
+use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
+use std::sync::Mutex;
 use std::time::Duration;
 use std::{process::{Command, Stdio}};
 use downloader::Downloader;
+use funcs::Storage;
 use serde::{Serialize, Deserialize};
-use tauri::{Window};
+use tauri::{Window, State};
 use tauri_plugin_store;
 use tokio::time::sleep;
 use std::{env, path::Path, fs};
-use anyhow::Result;
+use anyhow::{Result};
 mod funcs;
 mod downloader;
 
@@ -31,10 +34,13 @@ struct GPU {
 
 fn main() {
     tauri::Builder::default()
+        .manage(Storage {
+            store: Mutex::new(HashMap::new()),
+        })
         .plugin(tauri_plugin_store::Builder::default().build())
         // This is where you pass in your commands
         .invoke_handler(tauri::generate_handler![
-            init_webui,
+            stop_webui,
             start_webui,
             detect_git,
             detect_python,
@@ -93,54 +99,15 @@ async fn get_latest_image(dir_path: String) -> String {
 }
 
 #[tauri::command]
-async fn kill_proc(pid: i32) -> String {
-    let output = if cfg!(target_os = "windows") {
-        Command::new("taskkill")
-            .args(["/pid", &pid.to_string(), "/T", "/F"])
-            .output()
-            .expect("Failed to kill process tree")
-    } else {
-        Command::new("kill")
-            .arg("-9")
-            .arg(pid.to_string())
-            .output()
-            .expect("Failed to kill process tree")
-    };
-    let output_str = String::from_utf8(output.stdout).unwrap();
-    output_str
+async fn stop_webui(storage: State<'_, Storage>) -> Result<String, String> {
+    let pid = storage.store.lock().unwrap().get(&"pid".to_string()).unwrap().to_string();
+    let output = funcs::kill_proc(pid).await;
+    println!("output: {}", output.to_string());
+    Ok(output.to_string())
 }
 
 #[tauri::command]
-async fn start_webui(webuipath: String, window: Window) -> String {
-    let py_cmd = format!("{}\\venv\\Scripts\\python.exe", webuipath.clone());
-
-    let child = Command::new(py_cmd)
-        .arg("-u")
-        .arg("launch.py")
-        .current_dir(webuipath.clone())
-        .env("COMMANDLINE_ARGS", "--xformers --deepdanbooru --api --cors-allow-origins=http://localhost:3000")
-        .stdout(Stdio::piped())
-        .spawn()
-        .unwrap();
-    let stdout = child.stdout.expect("stdout error");
-
-    BufReader::new(stdout)
-        .lines()
-        .filter_map(|line| line.ok())
-        .for_each(|line| {
-            println!("{}", line);
-            // to emit the line to the UI, you can use the `emit` method
-            window.emit("stdout", Payload {message: line}).unwrap();
-        });
-    // TODO the window listen to close event and kill the child process
-    // window.listen("close_webui", move |_| {
-    //     child.kill().unwrap();
-    // });
-    "start webui".to_string()
-}
-
-#[tauri::command]
-async fn init_webui(webuipath: String, window: Window) -> Result<String, String> {
+async fn start_webui(webuipath: String, window: Window, storage: State<'_, Storage>) -> Result<String, String> {
     let _ = window.emit("stdout", Payload {message:"initializing webui".to_string()}).unwrap();
     let mut output_str = format!("Command init_webui: {}", webuipath);
     println!("{}", output_str);
@@ -196,7 +163,7 @@ async fn init_webui(webuipath: String, window: Window) -> Result<String, String>
             output_str = single_file_download(format!("{}\\{}", torch_whl_dir, torch_whl_file), torch_whl_download_url, window.clone()).await.expect("download torch whl failed");
             window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
         }
-        output_str = funcs::run_python_install_torch(webuipath.clone(), window.clone()).await;
+        output_str = funcs::run_python_install_torch(webuipath.clone(), &storage, &window).await;
         window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
     }
     if torchvision_installed {
@@ -217,28 +184,28 @@ async fn init_webui(webuipath: String, window: Window) -> Result<String, String>
             output_str = single_file_download(format!("{}\\{}", torch_whl_dir, torchvision_whl_file), torchvision_whl_download_url, window.clone()).await.expect("download torchvision whl failed");
             window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
         }
-        output_str = funcs::run_python_install_torchvision(webuipath.clone(), window.clone()).await;
+        output_str = funcs::run_python_install_torchvision(webuipath.clone(), &storage, &window).await;
         window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
     }
     let _ = window.emit("stdout", Payload {message: "check xformers".to_string()}).unwrap();
     if funcs::check_if_python_package_installed(webuipath.clone(), "xformers".to_string()).await {
         println!("xformers is installed");
     } else {
-        output_str = funcs::run_python_install_xformers(webuipath.clone(), window.clone()).await;
+        output_str = funcs::run_python_install_xformers(webuipath.clone(), &&storage, &window).await;
         window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
     }
     let _ = window.emit("stdout", Payload {message: "check codeformer".to_string()}).unwrap();
     if funcs::check_if_python_package_installed(webuipath.clone(), "lpips".to_string()).await {
         println!("CodeFormer is installed");
     } else {
-        output_str = funcs::run_python_install_codeformer(webuipath.clone(), window.clone()).await;
+        output_str = funcs::run_python_install_codeformer(webuipath.clone(), &storage, &window).await;
         window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
     }
     let _ = window.emit("stdout", Payload {message: "check GFPGAN".to_string()}).unwrap();
     if funcs::check_if_python_package_installed(webuipath.clone(), "gfpgan".to_string()).await {
         println!("gfpgan is installed");
     } else {
-        output_str = funcs::run_python_install_gfpgan(webuipath.clone(), window.clone()).await;
+        output_str = funcs::run_python_install_gfpgan(webuipath.clone(), &storage, &window).await;
         window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
     }
     
@@ -246,7 +213,7 @@ async fn init_webui(webuipath: String, window: Window) -> Result<String, String>
     if funcs::check_if_python_package_installed(webuipath.clone(), "clip".to_string()).await {
         println!("clip is installed");
     } else {
-        output_str = funcs::run_python_install_clip(webuipath.clone(), window.clone()).await;
+        output_str = funcs::run_python_install_clip(webuipath.clone(), &storage, &window).await;
         window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
     }
     
@@ -255,15 +222,39 @@ async fn init_webui(webuipath: String, window: Window) -> Result<String, String>
         println!("open_clip is installed");
     } else {
         println!("open_clip is not installed");
-        output_str = funcs::run_python_install_openclip(webuipath.clone(), window.clone()).await;
+        output_str = funcs::run_python_install_openclip(webuipath.clone(), &storage, &window).await;
         window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
     }
     
     // install requirements
-    output_str = funcs::run_python_install_requirements(webuipath.clone(), window.clone()).await;
+    output_str = funcs::run_python_install_requirements(webuipath.clone(), &storage, &window).await;
     window.emit("stdout", Payload {message: "Requirements installed".to_string()}).unwrap();
 
-    Ok(output_str)
+    // start webui
+    let py_cmd = format!("{}\\venv\\Scripts\\python.exe", webuipath.clone());
+
+    let child = Command::new(py_cmd)
+        .arg("-u")
+        .arg("launch.py")
+        .current_dir(webuipath.clone())
+        .env("COMMANDLINE_ARGS", "--xformers --deepdanbooru --api --cors-allow-origins=http://localhost:3000")
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    
+    storage.store.lock().unwrap().insert("pid".to_string(), child.id().to_string());
+    let stdout = child.stdout.expect("stdout error");
+    
+    BufReader::new(stdout)
+        .lines()
+        .filter_map(|line| line.ok())
+        .for_each(|line| {
+            println!("{}", line);
+            // to emit the line to the UI, you can use the `emit` method
+            window.emit("stdout", Payload {message: line}).unwrap();
+        });
+
+    Ok("".to_string())
 }
 
 
