@@ -9,7 +9,6 @@ import { themeChange } from "theme-change"
 
 import {
   ChatViewMenu,
-  ConfigMenu,
   ModelsMenu,
   PromptsMenu,
   QuickStartMenu,
@@ -17,7 +16,6 @@ import {
   WebUIMenu,
 } from "@/components/Sidebar"
 import { ChatView } from "@/containers/ChatView"
-import { ConfigView } from "@/containers/ConfigView"
 import { ModelsView } from "@/containers/ModelsView"
 import { StartView } from "@/containers/StartView"
 import { WebUIView } from "@/containers/WebUIView"
@@ -201,7 +199,6 @@ const Home: NextPage = () => {
           </div>
         </div>
         <main className="flex flex-1 flex-col w-full">
-          {menu === ConfigMenu.key && <ConfigView store={store} />}
           {menu === QuickStartMenu.key && (
             <StartView
               store={store}

@@ -16,18 +16,13 @@ export const ChatViewMenu = {
   name: "Chat",
   desc: "Chat with the sd",
 }
-export const ConfigMenu = {
-  key: 3,
-  name: "Configuration",
-  desc: "A lot of configurations",
-}
 export const ModelsMenu = {
-  key: 4,
+  key: 3,
   name: "Models",
   desc: "Model files",
 }
 export const PromptsMenu = {
-  key: 5,
+  key: 4,
   name: "Prompts",
   desc: "Prompt collections",
 }
@@ -36,14 +31,7 @@ interface SidebarProps {
   setMenu: Dispatch<SetStateAction<number>>
 }
 export const Sidebar: React.FC<SidebarProps> = ({ menu, setMenu }) => {
-  const MenusData = [
-    QuickStartMenu,
-    WebUIMenu,
-    ChatViewMenu,
-    ConfigMenu,
-    ModelsMenu,
-    PromptsMenu,
-  ]
+  const MenusData = [QuickStartMenu, WebUIMenu, ChatViewMenu, ModelsMenu, PromptsMenu]
   MenusData.forEach((menu, index) => {
     menu.key = index
   })

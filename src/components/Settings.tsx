@@ -1,5 +1,5 @@
 /* eslint-disable radix */
-import { AnimatePresence, motion } from "framer-motion"
+import { motion } from "framer-motion"
 import { Check } from "lucide-react"
 
 import { useSettings } from "@/lib/chatbot"
@@ -12,13 +12,7 @@ export function Settings() {
   ])
 
   return (
-    <div
-      className={`absolute bottom-[3.75rem] duration-200 flex flex-col gap-4 p-3 w-80 bg-base-100 border border-base-100 rounded-lg drop-shadow-md ${
-        open
-          ? "block right-[0.75rem] lg:right-[0.5rem]"
-          : "hidden opacity-0 right-[0.75rem]"
-      }`}
-    >
+    <div className="h-full w-full max-w-[60rem] duration-200 flex flex-col gap-4 p-3 bg-base-100">
       <div className="flex flex-col gap-1">
         <div className="flex flex-row justify-between">
           <h1 className="text-sm font-semibold">Model</h1>

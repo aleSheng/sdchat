@@ -34,13 +34,7 @@ export function PromptBook() {
   }, [setPrompts])
 
   return (
-    <div
-      className={`absolute bottom-[3.75rem] min-h-[13rem] max-h-[30rem] overflow-y-auto duration-200 flex flex-col gap-1 p-2 w-80 bg-base-100 border border-chatbox rounded-lg drop-shadow-md ${
-        open
-          ? "block right-[0.75rem] lg:right-[0.5rem]"
-          : "hidden opacity-0 right-[0.75rem]"
-      }`}
-    >
+    <div className="h-full w-full max-w-[60rem] overflow-y-auto duration-200 flex flex-col gap-1 p-2 bg-base-100">
       {prompts.length > 0 ? (
         <>
           {prompt && !prompts.includes(prompt) && (

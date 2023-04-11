@@ -211,6 +211,15 @@ export const sendPromptMessage = async (
   console.log("new msg", newMsg)
   useMessageList.getState().editMessage(uid, newMsg)
 }
+// msg box
+export type MsgBox = {
+  isOpen: boolean
+  setOpen: (isOpen: boolean) => void
+}
+export const useMsgBox = create<MsgBox>()((set) => ({
+  isOpen: false,
+  setOpen: (isOpen: boolean) => set((_state) => ({ isOpen })),
+}))
 
 // prompt book
 export type PromptBook = {
