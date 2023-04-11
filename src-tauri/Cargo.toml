@@ -1,6 +1,6 @@
 [package]
 name = "sdchat"
-version = "0.1.0"
+version = "0.1.2"
 description = "A Tauri App for Stable Diffusion and GPT"
 authors = ["ale"]
 license = ""
@@ -17,6 +17,7 @@ tauri-build = { version = "1.2.1", features = [] }
 [dependencies]
 tauri-plugin-store = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "dev" }
 anyhow = "1.0.66"
+encoding = "0.2"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.2.4", features = ["api-all"] }

@@ -1,4 +1,5 @@
 import { Album, Send, Settings2 } from "lucide-react"
+import { useState } from "react"
 
 import {
   sendPromptMessage,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/chatbot"
 
 export const ChatBar = () => {
+  const [talkToType, setTalkToType] = useState<"llama" | "sd">("llama")
   const [prompt, setPrompt] = useChatBar((state) => [state.prompt, state.setPrompt])
   const [url] = useWebuiUrl((state) => [state.url, state.setWebuiUrl])
 
@@ -31,18 +33,24 @@ export const ChatBar = () => {
 
   const history = useMessageList((state) => state.messages)
 
+  const onMsgboxClick = () => {
+    setPromptBookOpen(false)
+    setSettingsOpen(false)
+    setMsgboxOpen(true)
+  }
+
+  const onSelectLlamaType = () => {
+    setTalkToType("llama")
+  }
+
+  const onSelectSDType = () => {
+    setTalkToType("sd")
+  }
+
   return (
     <div className="w-full max-w-[60rem]">
       <div className="px-4 py-3 z-10 bg-base-200 flex flex-row items-center w-full border-background rounded-t-lg">
-        <a
-          href="#msgbox"
-          className="cursor-pointer"
-          onClick={() => {
-            setPromptBookOpen(false)
-            setSettingsOpen(false)
-            setMsgboxOpen(true)
-          }}
-        >
+        <a href="#msgbox" className="cursor-pointer" onClick={onMsgboxClick}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -105,15 +113,31 @@ export const ChatBar = () => {
               : "rounded-lg"
           }`}
         >
+          <div className="dropdown dropdown-right dropdown-end">
+            <label tabIndex={0} className="btn m-1">
+              Talk to {talkToType}
+            </label>
+            <ul
+              tabIndex={0}
+              className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+            >
+              <li>
+                <a onClick={onSelectLlamaType}>Llama</a>
+              </li>
+              <li>
+                <a onClick={onSelectSDType}>Stable Diffusion</a>
+              </li>
+            </ul>
+          </div>
           <input
             type="text"
             className="w-full text-lg outline-none focus:border-none bg-transparent"
-            placeholder="Type what you want to see..."
+            placeholder="Type what you want to say or see..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                void sendPromptMessage(url, prompt)
+                void sendPromptMessage(url, prompt, talkToType)
                 e.preventDefault()
               } else if (
                 e.key === "ArrowUp" &&
@@ -141,7 +165,7 @@ export const ChatBar = () => {
             <button
               className={String(prompt ? "cursor-pointer" : "cursor-default")}
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onClick={() => sendPromptMessage(url, prompt)}
+              onClick={() => sendPromptMessage(url, prompt, talkToType)}
             >
               <Send
                 className={`text-accent rotate-45 ${

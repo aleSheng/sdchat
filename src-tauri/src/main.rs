@@ -2,7 +2,8 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
-
+use encoding::all::{GBK, UTF_8, GB18030};
+use encoding::{DecoderTrap, EncoderTrap,Encoding};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use std::sync::Mutex;
@@ -11,7 +12,7 @@ use std::{process::{Command, Stdio}};
 use downloader::Downloader;
 use funcs::Storage;
 use serde::{Serialize, Deserialize};
-use tauri::{Window, State};
+use tauri::{Window, State, window};
 use tauri_plugin_store;
 use tokio::time::sleep;
 use std::{env, path::Path, fs};
@@ -42,6 +43,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             stop_webui,
             start_webui,
+            start_llama,
+            stop_llama,
             detect_git,
             detect_python,
             get_gpu_info,
@@ -255,6 +258,49 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
         });
 
     Ok("".to_string())
+}
+
+#[tauri::command]
+async fn stop_llama(storage: State<'_, Storage>) -> Result<String, String> {
+    let pid = storage.store.lock().unwrap().get(&"llamapid".to_string()).unwrap().to_string();
+    let output = funcs::kill_proc(pid).await;
+    println!("output: {}", output.to_string());
+    Ok(output.to_string())
+}
+#[tauri::command]
+async fn start_llama( modelpath: String, storage: State<'_, Storage>, window: Window ) -> Result<String, String> {
+    let (mut rx, mut child) = tauri::api::process::Command::new_sidecar("main")
+    .expect("side car error")
+    .args(["-m", &modelpath, "-ins","-c", "2048","--temp","0.2","-n","2560"])
+    .spawn()
+    .expect("Failed to spawn cargo");
+
+    storage.store.lock().unwrap().insert("llamapid".to_string(), child.pid().to_string());
+    let child = std::sync::Arc::new(Mutex::new(child));
+    window.listen("llamamsg", move |event| {
+        let payload: serde_json::Value = serde_json::from_str(event.payload().unwrap()).unwrap();
+        let msg = payload["message"].as_str().unwrap();
+        println!("msg: {}", msg);
+        let msgbit = msg.as_bytes();
+        println!("msgbit: {:?}", msgbit);
+        let mut msg_vec = msgbit.to_vec();
+        msg_vec.push(b'\n');
+        child
+            .lock()
+            .unwrap()
+            .write(&msg_vec)
+            .unwrap();
+    });
+
+    tauri::async_runtime::spawn(async move {
+      while let Some(event) = rx.recv().await {
+        println!("EVENT RECEIVED {:?}", event);
+        if let tauri::api::process::CommandEvent::Stdout(line) = event {
+          println!("STDOUT from sidecar....: {}", line);
+        }
+      }
+    });
+  Ok("done".to_string())
 }
 
 

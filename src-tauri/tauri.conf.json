@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "sdchat",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "tauri": {
     "allowlist": {
@@ -32,7 +32,8 @@
             "name": "git",
             "cmd": "git",
             "args": true
-          }
+          },
+          { "name": "binaries/main", "sidecar": true }
         ],
         "sidecar": true
       },
@@ -65,7 +66,7 @@
       "deb": {
         "depends": []
       },
-      "externalBin": [],
+      "externalBin": ["binaries/main"],
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",

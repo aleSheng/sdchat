@@ -11,7 +11,7 @@ export const ChatView = ({ webui_url }: { webui_url: string }) => {
   return (
     <>
       <div className="grow carousel w-full">
-        <div id="msgbox" className="carousel-item w-full flex justify-center">
+        <div id="msgbox" className="carousel-item w-full flex flex-col justify-center">
           <MessageList />
         </div>
         <div id="promptbook" className="carousel-item w-full flex justify-center">

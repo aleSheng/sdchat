@@ -37,6 +37,15 @@ export const openWebview = async (
   })
 }
 
+export const windowEmit = async (event: string, payload: unknown) => {
+  if (isNode()) {
+    // This shouldn't ever happen when React fully loads
+    return Promise.resolve()
+  }
+  const tauriWindow = await import("@tauri-apps/api/window")
+  return tauriWindow.appWindow.emit(event, payload)
+}
+
 export const listen = async (
   event: string,
   handler: EventCallback<unknown>,

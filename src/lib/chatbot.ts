@@ -2,6 +2,8 @@ import { create } from "zustand"
 
 import { getPromptModifers } from "@/components/PromptEngine"
 
+import { windowEmit } from "./api"
+
 export enum MessageTypeEnum {
   YOU = "you",
   STABLE_DIFFUSION = "stable diffusion",
@@ -111,9 +113,15 @@ export const getLastNMessages = (n: number) => {
 export const sendPromptMessage = async (
   webui_url: string,
   prompt: string,
+  talkToType: string,
   modifiers?: string,
 ) => {
   if (!prompt && !modifiers) return
+
+  if (talkToType === "llama") {
+    void windowEmit("llamamsg", { message: prompt })
+    return
+  }
 
   const settings = useSettings.getState().settings
   useSettings.getState().setOpen(false)
@@ -270,6 +278,9 @@ export type SettingsState = {
 
   isOpen: boolean
   setOpen: (isOpen: boolean) => void
+
+  llama_model_path: string
+  setLlamaModelPath: (path: string) => void
 }
 
 export const useSettings = create<SettingsState>()((set) => ({
@@ -289,4 +300,8 @@ export const useSettings = create<SettingsState>()((set) => ({
 
   isOpen: false,
   setOpen: (isOpen: boolean) => set((state: SettingsState) => ({ isOpen })),
+
+  llama_model_path: "F:\\ai\\gptworks\\llama.cpp\\zh-models\\13B\\ggml-model-q4_0.bin",
+  setLlamaModelPath: (path: string) =>
+    set((state: SettingsState) => ({ llama_model_path: path })),
 }))

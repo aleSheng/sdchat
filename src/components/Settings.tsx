@@ -17,7 +17,7 @@ export function Settings() {
         <div className="flex flex-row justify-between">
           <h1 className="text-sm font-semibold">Model</h1>
         </div>
-        <div className="flex flex-row gap-2 p-1 rounded-lg bg-white/5 border border-white/10 w-fit">
+        <div className="flex flex-row gap-2 p-1 rounded-lg border w-fit">
           {["1.5", "2.1", "2.1 large", "anime"].map((model) => (
             <button
               key={model}
@@ -67,7 +67,7 @@ export function Settings() {
                   <motion.div
                     layoutId="model"
                     transition={{ duration: 0.1 }}
-                    className="absolute inset-0 rounded bg-white/10"
+                    className="absolute inset-0 rounded"
                     initial={false}
                   />
                 )}
@@ -86,7 +86,7 @@ export function Settings() {
         </div>
         <input
           type="range"
-          className="w-full h-2 bg-white/10 rounded-full appearance-none"
+          className="w-full h-2 rounded-full appearance-none"
           min={settings.model === "stable-diffusion-768-v2-1" ? 768 : 512}
           max={settings.model === "anything-v3.0" ? 768 : 1024}
           step={64}
@@ -108,7 +108,7 @@ export function Settings() {
         </div>
         <input
           type="range"
-          className="w-full h-2 bg-white/10 rounded-full appearance-none"
+          className="w-full h-2 rounded-full appearance-none"
           min={1}
           max={10}
           step={1}
@@ -129,7 +129,7 @@ export function Settings() {
         </div>
         <input
           type="range"
-          className="w-full h-2 bg-white/10 rounded-full appearance-none"
+          className="w-full h-2 rounded-full appearance-none"
           min={10}
           max={150}
           step={1}
@@ -150,7 +150,7 @@ export function Settings() {
         </div>
         <input
           type="range"
-          className="w-full h-2 bg-white/10 rounded-full appearance-none"
+          className="w-full h-2  rounded-full appearance-none"
           min={0}
           max={35}
           step={0.1}
@@ -190,7 +190,7 @@ export function Settings() {
           <input
             type="checkbox"
             className={`w-5 h-5 rounded appearance-none cursor-pointer ${
-              settings.modify ? "bg-[#99c8ff]" : "bg-white/10"
+              settings.modify ? "bg-[#99c8ff]" : ""
             }`}
             checked={settings.modify}
             onChange={(e) => {
