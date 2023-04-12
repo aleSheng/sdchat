@@ -47,7 +47,7 @@ export const StartView: React.FC<StartViewProps> = ({
 
   return (
     <>
-      <div className="stats shadow mx-2">
+      <div className="stats shadow m-2">
         <div className="stat">
           <div className="stat-title">System Info</div>
           <div className="stat-value">{store.systemInfo.archName}</div>
@@ -69,7 +69,7 @@ export const StartView: React.FC<StartViewProps> = ({
           )}
         </div>
       </div>
-      <div className="stats shadow mx-2">
+      <div className="stats shadow m-2">
         <div className="stat">
           <div className="stat-title">CUDA Version</div>
           <div className="stat-value">{store.systemInfo.cudaVersion}</div>
