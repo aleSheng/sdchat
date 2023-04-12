@@ -63,17 +63,14 @@ export const ChatBar = () => {
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            className={`lucide lucide-bot ${
+            className={`lucide lucide-message-circle ${
               msgboxOpen ? "text-primary" : "hover:text-sencodary"
             }`}
           >
-            <rect width="18" height="10" x="3" y="11" rx="2"></rect>
-            <circle cx="12" cy="5" r="2"></circle>
-            <path d="M12 7v4"></path>
-            <line x1="8" x2="8" y1="16" y2="16"></line>
-            <line x1="16" x2="16" y1="16" y2="16"></line>
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
           </svg>
         </a>
+        <div className="divider divider-horizontal" />
         <a
           href="#promptbook"
           className="cursor-pointer"
@@ -90,6 +87,7 @@ export const ChatBar = () => {
             size={20}
           />
         </a>
+        <div className="divider divider-horizontal" />
         <a
           href="#settings"
           className="cursor-pointer"

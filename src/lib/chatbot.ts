@@ -18,14 +18,11 @@ export type MessageType = {
   type: MessageTypeEnum
   id: string
   timestamp: number
-  content: string
-  status: string
+  status: MessageStatusEnum
   prompt: string
-  loading: boolean
   error: string | null
   images: string[]
   settings: Settings | null
-  rating: number
 }
 
 export type ChatBarType = {
@@ -68,6 +65,7 @@ export const useWebuiUrl = create<WebuiUrlType>()((set) => ({
 
 export type MessageHistory = {
   messages: Record<string, MessageType>
+  loading_msg_id: string | null
   addMessage: (message: MessageType) => void
   editMessage: (id: string, message: MessageType) => void
   deleteMessage: (id: string) => void
@@ -75,6 +73,7 @@ export type MessageHistory = {
 
 export const useMessageList = create<MessageHistory>()((set) => ({
   messages: {},
+  loading_msg_id: null,
   addMessage: (message: MessageType) =>
     set((state: MessageHistory) => ({
       messages: { ...state.messages, [message.id]: message },
@@ -107,33 +106,10 @@ export const getLastNMessages = (n: number) => {
   return values.sort((a, b) => b.timestamp - a.timestamp).slice(0, n)
 }
 
-export const createMsg = (
-  type: MessageTypeEnum,
-  prompt: string,
-  settings: Settings | null,
-) => {
-  const uid = makeId()
-  const newMsg: MessageType = {
-    type: type,
-    id: uid,
-    prompt: prompt,
-    timestamp: Date.now(),
-    loading: true,
-    error: null,
-    images: [],
-    settings: settings,
-    rating: 3,
-    content: "",
-    status: MessageStatusEnum.LOADING,
-  }
-  useMessageList.getState().addMessage(newMsg)
-  return newMsg
-}
-
 export const sendPromptMessage = async (
   webui_url: string,
   prompt: string,
-  talkToType: string,
+  talkToType: "llama" | "sd",
 ) => {
   if (!prompt) return
 
@@ -141,16 +117,52 @@ export const sendPromptMessage = async (
   useSettings.getState().setOpen(false)
   useChatBar.getState().setPrompt("")
 
-  const newMsg = createMsg(MessageTypeEnum.YOU, prompt, settings)
+  const uid = makeId()
+  const newMsg: MessageType = {
+    type: MessageTypeEnum.YOU,
+    id: uid,
+    prompt: prompt,
+    timestamp: Date.now(),
+    error: null,
+    images: [],
+    settings: settings,
+    status: MessageStatusEnum.LOADING,
+  }
+  useMessageList.getState().addMessage(newMsg)
 
   if (talkToType === "llama") {
     void windowEmit("llamamsg", { message: prompt })
+    const uid = makeId()
+    const loadingMsg: MessageType = {
+      type: MessageTypeEnum.LLAMA,
+      id: uid,
+      prompt: "",
+      timestamp: Date.now(),
+      error: null,
+      images: [],
+      settings: settings,
+      status: MessageStatusEnum.LOADING,
+    }
+    useMessageList.getState().addMessage(loadingMsg)
+
+    useMessageList.getState().loading_msg_id = loadingMsg.id
     return
   }
 
   let res = null
 
-  const reply_msg = createMsg(MessageTypeEnum.SD, prompt, newMsg.settings)
+  const reply_msg: MessageType = {
+    type: MessageTypeEnum.SD,
+    id: makeId(),
+    prompt: prompt,
+    timestamp: Date.now(),
+    error: null,
+    images: [],
+    settings: newMsg.settings,
+    status: MessageStatusEnum.LOADING,
+  }
+  useMessageList.getState().addMessage(reply_msg)
+  useMessageList.getState().loading_msg_id = reply_msg.id
 
   try {
     res = await fetch(`${webui_url}/sdapi/v1/txt2img`, {
@@ -170,7 +182,6 @@ export const sendPromptMessage = async (
   } catch (e) {
     console.log(e)
   }
-  reply_msg.loading = false
 
   if (!res || !res.ok) {
     switch (res?.status) {

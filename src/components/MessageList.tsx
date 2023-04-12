@@ -1,5 +1,14 @@
+import { useEffect, useRef } from "react"
+
 import { listen } from "@/lib/api"
-import { createMsg, MessageTypeEnum, useMessageList, useSettings } from "@/lib/chatbot"
+import {
+  makeId,
+  MessageStatusEnum,
+  MessageType,
+  MessageTypeEnum,
+  useMessageList,
+  useSettings,
+} from "@/lib/chatbot"
 import { open } from "@/lib/dialog"
 import { invoke } from "@/lib/tauri"
 
@@ -7,6 +16,7 @@ import { Message } from "./Message"
 
 export function MessageList() {
   const history = useMessageList((state) => state.messages)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const [
     llama_model_path,
     setLlamaModelPath,
@@ -58,8 +68,39 @@ export function MessageList() {
       if (llamaStatus === "active") {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const is_reply = line.indexOf(">") === 0
+        const content = line.replace(">", "").trim()
+        if (content.length <= 0) {
+          return
+        }
         if (is_reply) {
-          createMsg(MessageTypeEnum.LLAMA, line, settings)
+          const loading_id = useMessageList.getState().loading_msg_id
+          if (loading_id) {
+            const msg: MessageType = {
+              type: MessageTypeEnum.LLAMA,
+              id: loading_id,
+              prompt: content,
+              timestamp: Date.now(),
+              error: null,
+              images: [],
+              settings: settings,
+              status: MessageStatusEnum.RECEIVED,
+            }
+            useMessageList.getState().editMessage(loading_id, msg)
+            useMessageList.getState().loading_msg_id = null
+          } else {
+            const uid = makeId()
+            const msg: MessageType = {
+              type: MessageTypeEnum.LLAMA,
+              id: uid,
+              prompt: content,
+              timestamp: Date.now(),
+              error: null,
+              images: [],
+              settings: settings,
+              status: MessageStatusEnum.RECEIVED,
+            }
+            useMessageList.getState().addMessage(msg)
+          }
         }
       }
     })
@@ -88,6 +129,14 @@ export function MessageList() {
         console.error(err)
       })
   }
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [history])
 
   return (
     <>
@@ -149,10 +198,11 @@ export function MessageList() {
           )}
         </div>
       )}
-      <div className="h-full justify-end overflow-y-scroll">
+      <div className="h-full justify-end overflow-y-auto p-5">
         {Object.values(history).map((message) => (
           <>{message && <Message key={message.id} message={message} />}</>
         ))}
+        <div ref={messagesEndRef} />
       </div>
     </>
   )

@@ -1,4 +1,3 @@
-import { Wand2 } from "lucide-react"
 import React from "react"
 
 import {
@@ -7,50 +6,86 @@ import {
   MessageTypeEnum,
   sendPromptMessage,
   usePromptBook,
+  useSettings,
   useWebuiUrl,
 } from "@/lib/chatbot"
 
 import { Image } from "./Image"
 
-function saveImage(image: string, name: string) {
-  // download image from external URL
-  void fetch(image)
-    .then((res) => res.blob())
-    .then((blob) => {
-      // create blob link to download
-      const url = window.URL.createObjectURL(new Blob([blob]))
-      const link = document.createElement("a")
-      link.setAttribute("download", `${name}.png`)
-      link.setAttribute("href", url)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    })
-}
-
 export const Message = ({ message }: { message: MessageType }) => {
   const [selectedImage, setSelectedImage] = React.useState(-1)
   const addPrompt = usePromptBook((state) => state.addPrompt)
   const [url] = useWebuiUrl((state) => [state.url])
-  return (
-    <div className={`my-2 w-full hover:bg-black/10 group`}>
-      <div
-        className={`mx-auto max-w-[60rem] relative px-2 lg:px-0 flex flex-col w-full ${
-          message.type === MessageTypeEnum.YOU ? "items-start" : "items-end"
-        }`}
-      >
-        <div className="flex flex-row gap-2 items-end h-fit">
-          <h1 className="font-semibold">
-            {message.type === MessageTypeEnum.YOU ? "You" : "Stable Diffusion"}
-          </h1>
-          {message.timestamp && (
-            <p className="text-xs pb-0.5">
-              {new Date(message.timestamp).toLocaleTimeString()}
-            </p>
-          )}
-          {message.modifiers && <Wand2 className="pb-[3px]" size={16} />}
+  const [talkToType] = useSettings((state) => [state.talkToType])
+  return message.type === MessageTypeEnum.YOU ? (
+    <div className="chat chat-end">
+      <div className="chat-image avatar">
+        <div className="w-10">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            className="lucide lucide-smile"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+            <line x1="9" x2="9.01" y1="9" y2="9"></line>
+            <line x1="15" x2="15.01" y1="9" y2="9"></line>
+          </svg>
         </div>
-        {message.prompt && <p className="text-left break-word">{message.prompt}</p>}
+      </div>
+      <div className="chat-header">
+        {message.type}
+        {message.timestamp && (
+          <time className="text-xs opacity-50 pl-2">
+            {new Date(message.timestamp).toLocaleTimeString()}
+          </time>
+        )}
+      </div>
+      <div className="chat-bubble chat-bubble-primary">
+        {message.prompt && <p>{message.prompt}</p>}
+      </div>
+    </div>
+  ) : (
+    <div className="chat chat-start">
+      <div className="chat-image avatar">
+        <div className="w-10">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            className="lucide lucide-bot"
+          >
+            <rect width="18" height="10" x="3" y="11" rx="2"></rect>
+            <circle cx="12" cy="5" r="2"></circle>
+            <path d="M12 7v4"></path>
+            <line x1="8" x2="8" y1="16" y2="16"></line>
+            <line x1="16" x2="16" y1="16" y2="16"></line>
+          </svg>
+        </div>
+      </div>
+      <div className="chat-header">
+        {message.type}
+        {message.timestamp && (
+          <time className="text-xs opacity-50 pl-2">
+            {new Date(message.timestamp).toLocaleTimeString()}
+          </time>
+        )}
+      </div>
+      <div className="chat-bubble chat-bubble-info">
+        {message.prompt && <p>{message.prompt}</p>}
         {message.images && message.settings && message.images.length > 0 && (
           <div className={`flex flex-row gap-2 overflow-hidden flex-wrap max-w-full`}>
             {message.images.map((image, i) => (
@@ -67,75 +102,49 @@ export const Message = ({ message }: { message: MessageType }) => {
           </div>
         )}
         {message.error && <p className="text-red-500">{message.error}</p>}
-        {message.loading && message.images && message.images.length === 0 && (
-          <div className="flex flex-row gap-1 my-3">
-            <div className="animate-pulse bg-white/25 w-3 h-3 rounded-full" />
-            <div className="animate-pulse bg-white/25 delay-75 w-3 h-3 rounded-full" />
-            <div className="animate-pulse bg-white/25 delay-150 w-3 h-3 rounded-full" />
-          </div>
-        )}
-        <div className="flex flex-row flex-wrap gap-2 my-2">
-          {message.status === MessageStatusEnum.ERROR && (
-            <button
-              className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
-              onClick={() => {
-                void sendPromptMessage(url, message.prompt, message.modifiers)
-              }}
-            >
-              Retry
-            </button>
+        {message.status === MessageStatusEnum.LOADING &&
+          message.images &&
+          message.images.length === 0 && (
+            <div className="flex flex-row gap-1 my-3">
+              <div className="animate-pulse bg-white/25 w-3 h-3 rounded-full" />
+              <div className="animate-pulse bg-white/25 delay-75 w-3 h-3 rounded-full" />
+              <div className="animate-pulse bg-white/25 delay-150 w-3 h-3 rounded-full" />
+            </div>
           )}
-          {message.status === MessageStatusEnum.RECEIVED && (
-            <>
+        {message.type === MessageTypeEnum.SD && (
+          <div className="flex flex-row flex-wrap gap-2 my-2">
+            {message.status === MessageStatusEnum.ERROR && (
               <button
                 className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
                 onClick={() => {
-                  void sendPromptMessage(url, message.prompt, message.modifiers)
+                  void sendPromptMessage(url, message.prompt, talkToType)
                 }}
               >
                 Retry
               </button>
-              <button
-                className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
-                onClick={() => {
-                  if (selectedImage === -1) {
-                    message.images.forEach((image, i) =>
-                      saveImage(
-                        image,
-                        `${message.prompt.replace(/[^a-zA-Z0-9]/g, "_")}-${i}`,
-                      ),
-                    )
-                  } else {
-                    saveImage(
-                      message.images[selectedImage],
-                      message.prompt.replace(/[^a-zA-Z0-9]/g, "_"),
-                    )
-                  }
-                }}
-              >
-                Save Image
-              </button>
-              <button
-                className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
-                onClick={() => {
-                  addPrompt(message.prompt)
-                }}
-              >
-                Save Prompt
-              </button>
-              {message.modifiers && (
+            )}
+            {message.status === MessageStatusEnum.RECEIVED && (
+              <>
                 <button
                   className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
                   onClick={() => {
-                    void sendPromptMessage(url, message.prompt, message.modifiers)
+                    void sendPromptMessage(url, message.prompt, talkToType)
                   }}
                 >
-                  Remix
+                  Retry
                 </button>
-              )}
-            </>
-          )}
-        </div>
+                <button
+                  className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
+                  onClick={() => {
+                    addPrompt(message.prompt)
+                  }}
+                >
+                  Save Prompt
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
