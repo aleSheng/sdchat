@@ -176,6 +176,21 @@ pub async fn get_gpu_memory() -> serde_json::Number {
     
 }
 
+pub fn check_or_clone_repo(name:String, repo_url: String, path_dir: String, commit: String, window: &Window) -> Result<(), String> {
+    let is_dir = Path::new(&path_dir).is_dir();
+    if is_dir {
+        println!("{} dir exists", name);
+    } else {
+        println!("{} dir does not exist. Cloning repository...", name);
+        let _ = window.emit("stdout", Payload {message: format!("{} dir does not exist. Cloning repository...", name), stdtype: "stdout".to_string()}).unwrap();
+        let repo = git2::Repository::clone(&repo_url, path_dir).expect("clone error");
+        let obj: git2::Object = repo.find_commit(git2::Oid::from_str(&commit).unwrap()).unwrap().into_object();
+        repo.checkout_tree(&obj, None).unwrap();
+        repo.set_head_detached(obj.id()).unwrap();
+    }
+    Ok(())
+}
+
 
 pub async fn create_env(webuipath: String) -> String {
     let cmd = "python".to_string();
@@ -254,7 +269,7 @@ pub async fn run_venv_py(webuipath: String, args: Vec<&str>, storage: &State<'_,
  */
 pub async fn run_commands(webuipath: String, cmd: String, args: Vec<&str>, storage: &State<'_, Storage>, window: &Window) -> String {
     let msg = format!("{} {}", cmd, args.clone().join("").to_string());
-    window.emit("stdout", Payload {message: msg}).unwrap();
+    window.emit("stdout", Payload {message: msg, stdtype: "stdout".to_string()}).unwrap();
     let child = std::process::Command::new(cmd)
         .args(args)
         .current_dir(webuipath)
@@ -270,7 +285,7 @@ pub async fn run_commands(webuipath: String, cmd: String, args: Vec<&str>, stora
         .filter_map(|line| line.ok())
         .for_each(|line| {
             println!("{}", line);
-            window.emit("stdout", Payload {message: line}).unwrap();
+            window.emit("stdout", Payload {message: line, stdtype: "stdout".to_string()}).unwrap();
         });
     "done".to_string()
 }

@@ -142,7 +142,7 @@ const Home: NextPage = () => {
       </Head>
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content flex flex-col items-center justify-center">
-        <div className="w-full navbar bg-base-100">
+        <div className="w-full navbar bg-base-100 flex">
           <div className="flex-none lg:hidden">
             <label htmlFor="my-drawer" className="btn btn-square btn-ghost">
               <svg
@@ -198,7 +198,7 @@ const Home: NextPage = () => {
             )}
           </div>
         </div>
-        <main className="flex flex-1 flex-col w-full">
+        <main className="flex flex-1 flex-col w-full overflow-y-hidden">
           {menu === QuickStartMenu.key && (
             <StartView
               store={store}

@@ -1,5 +1,4 @@
 import { Album, Send, Settings2 } from "lucide-react"
-import { useState } from "react"
 
 import {
   sendPromptMessage,
@@ -12,7 +11,10 @@ import {
 } from "@/lib/chatbot"
 
 export const ChatBar = () => {
-  const [talkToType, setTalkToType] = useState<"llama" | "sd">("llama")
+  const [talkToType, setTalkToType] = useSettings((state) => [
+    state.talkToType,
+    state.setTalkToType,
+  ])
   const [prompt, setPrompt] = useChatBar((state) => [state.prompt, state.setPrompt])
   const [url] = useWebuiUrl((state) => [state.url, state.setWebuiUrl])
 

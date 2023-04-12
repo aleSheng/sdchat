@@ -1,6 +1,6 @@
 export const ModelsView = () => {
   return (
-    <div className="overflow-auto flex flex-wrap justify-start gap-4">
+    <div className="overflow-y-auto min-h-0 flex flex-wrap justify-start gap-4">
       <div className="card card-compact w-96 h-96 bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title">Stable Diffusion v1.5</h2>

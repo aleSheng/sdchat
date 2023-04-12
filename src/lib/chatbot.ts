@@ -1,13 +1,11 @@
 import { create } from "zustand"
 
-import { getPromptModifers } from "@/components/PromptEngine"
-
 import { windowEmit } from "./api"
 
 export enum MessageTypeEnum {
   YOU = "you",
-  STABLE_DIFFUSION = "stable diffusion",
-  OTHER = "other",
+  SD = "stable diffusion",
+  LLAMA = "llama",
   SYSTEM = "system",
 }
 export enum MessageStatusEnum {
@@ -23,7 +21,6 @@ export type MessageType = {
   content: string
   status: string
   prompt: string
-  modifiers: string | undefined
   loading: boolean
   error: string | null
   images: string[]
@@ -110,46 +107,16 @@ export const getLastNMessages = (n: number) => {
   return values.sort((a, b) => b.timestamp - a.timestamp).slice(0, n)
 }
 
-export const sendPromptMessage = async (
-  webui_url: string,
+export const createMsg = (
+  type: MessageTypeEnum,
   prompt: string,
-  talkToType: string,
-  modifiers?: string,
+  settings: Settings | null,
 ) => {
-  if (!prompt && !modifiers) return
-
-  if (talkToType === "llama") {
-    void windowEmit("llamamsg", { message: prompt })
-    return
-  }
-
-  const settings = useSettings.getState().settings
-  useSettings.getState().setOpen(false)
-
-  if (prompt.length < 150 && !modifiers) {
-    modifiers = getPromptModifers()
-  }
-
-  if (prompt.length < 35) {
-    if (modifiers) {
-      modifiers = `${prompt} ${modifiers}`
-    } else {
-      modifiers = prompt
-    }
-  }
-
-  if (!settings.modify) {
-    modifiers = undefined
-  }
-
-  useChatBar.getState().setPrompt("")
-
   const uid = makeId()
   const newMsg: MessageType = {
-    type: MessageTypeEnum.YOU,
+    type: type,
     id: uid,
     prompt: prompt,
-    modifiers: modifiers || undefined,
     timestamp: Date.now(),
     loading: true,
     error: null,
@@ -160,8 +127,30 @@ export const sendPromptMessage = async (
     status: MessageStatusEnum.LOADING,
   }
   useMessageList.getState().addMessage(newMsg)
+  return newMsg
+}
+
+export const sendPromptMessage = async (
+  webui_url: string,
+  prompt: string,
+  talkToType: string,
+) => {
+  if (!prompt) return
+
+  const settings = useSettings.getState().settings
+  useSettings.getState().setOpen(false)
+  useChatBar.getState().setPrompt("")
+
+  const newMsg = createMsg(MessageTypeEnum.YOU, prompt, settings)
+
+  if (talkToType === "llama") {
+    void windowEmit("llamamsg", { message: prompt })
+    return
+  }
 
   let res = null
+
+  const reply_msg = createMsg(MessageTypeEnum.SD, prompt, newMsg.settings)
 
   try {
     res = await fetch(`${webui_url}/sdapi/v1/txt2img`, {
@@ -169,7 +158,6 @@ export const sendPromptMessage = async (
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         prompt: prompt,
-        modifiers,
         model: settings.model,
         width: settings.width,
         height: settings.height,
@@ -182,42 +170,41 @@ export const sendPromptMessage = async (
   } catch (e) {
     console.log(e)
   }
-  newMsg.loading = false
+  reply_msg.loading = false
 
   if (!res || !res.ok) {
     switch (res?.status) {
       case 400:
-        newMsg.error = "Bad request"
+        reply_msg.error = "Bad request"
         break
       case 429:
-        newMsg.error = "You're too fast! Slow down!"
+        reply_msg.error = "You're too fast! Slow down!"
         break
       default:
-        newMsg.error = "Something went wrong"
+        reply_msg.error = "Something went wrong"
         break
     }
 
-    newMsg.status = MessageStatusEnum.ERROR
-    useMessageList.getState().editMessage(uid, newMsg)
+    reply_msg.status = MessageStatusEnum.ERROR
+    useMessageList.getState().editMessage(reply_msg.id, newMsg)
     return
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const data = await res.json()
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-  newMsg.images = data.images
+  reply_msg.images = data.images
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   if (data.length === 0) {
-    newMsg.error = "No results"
-    newMsg.status = MessageStatusEnum.ERROR
-    useMessageList.getState().editMessage(uid, newMsg)
+    reply_msg.error = "No results"
+    reply_msg.status = MessageStatusEnum.ERROR
+    useMessageList.getState().editMessage(reply_msg.id, reply_msg)
     return
   }
-  newMsg.status = MessageStatusEnum.RECEIVED
+  reply_msg.status = MessageStatusEnum.RECEIVED
 
-  console.log("new msg", newMsg)
-  useMessageList.getState().editMessage(uid, newMsg)
+  useMessageList.getState().editMessage(reply_msg.id, reply_msg)
 }
 // msg box
 export type MsgBox = {
@@ -281,6 +268,12 @@ export type SettingsState = {
 
   llama_model_path: string
   setLlamaModelPath: (path: string) => void
+
+  talkToType: "llama" | "sd"
+  setTalkToType: (type: "llama" | "sd") => void
+
+  llamaStatus: "inactive" | "loading" | "error" | "active"
+  setLlamaStatus: (status: "inactive" | "loading" | "error" | "active") => void
 }
 
 export const useSettings = create<SettingsState>()((set) => ({
@@ -304,4 +297,10 @@ export const useSettings = create<SettingsState>()((set) => ({
   llama_model_path: "F:\\ai\\gptworks\\llama.cpp\\zh-models\\13B\\ggml-model-q4_0.bin",
   setLlamaModelPath: (path: string) =>
     set((state: SettingsState) => ({ llama_model_path: path })),
+
+  talkToType: "llama",
+  setTalkToType: (type) => set((state: SettingsState) => ({ talkToType: type })),
+
+  llamaStatus: "inactive",
+  setLlamaStatus: (status) => set((state: SettingsState) => ({ llamaStatus: status })),
 }))

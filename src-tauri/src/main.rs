@@ -12,7 +12,7 @@ use std::{process::{Command, Stdio}};
 use downloader::Downloader;
 use funcs::Storage;
 use serde::{Serialize, Deserialize};
-use tauri::{Window, State, window};
+use tauri::{Window, State};
 use tauri_plugin_store;
 use tokio::time::sleep;
 use std::{env, path::Path, fs};
@@ -24,6 +24,7 @@ mod downloader;
 #[derive(Clone, serde::Serialize)]
 struct Payload {
   message: String,
+  stdtype: String,
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -111,7 +112,7 @@ async fn stop_webui(storage: State<'_, Storage>) -> Result<String, String> {
 
 #[tauri::command]
 async fn start_webui(webuipath: String, window: Window, storage: State<'_, Storage>) -> Result<String, String> {
-    let _ = window.emit("stdout", Payload {message:"initializing webui".to_string()}).unwrap();
+    let _ = window.emit("stdout", Payload {message:"initializing webui".to_string(), stdtype: "stdout".to_string()}).unwrap();
     let mut output_str = format!("Command init_webui: {}", webuipath);
     println!("{}", output_str);
     let venv_dir = format!("{}\\venv", webuipath.clone());
@@ -120,7 +121,7 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
         println!("venv exists");
     } else {
         let output_str = funcs::create_env(webuipath.clone()).await;
-        window.emit("stdout", Payload {message: output_str}).unwrap();
+        window.emit("stdout", Payload {message: output_str, stdtype: "stdout".to_string()}).unwrap();
     }
 
     // pip config set global.index-url http://mirrors.cloud.tencent.com/pypi/simple
@@ -150,7 +151,7 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
         println!("torch is installed");
     } else {
         println!("torch is not installed");
-        let _ = window.emit("stdout", Payload {message: "torch is not installed".to_string()}).unwrap();
+        let _ = window.emit("stdout", Payload {message: "torch is not installed".to_string(), stdtype: "stdout".to_string()}).unwrap();
         if funcs::check_if_file_exists(torch_whl_dir.clone(), torch_whl_file.clone()).await {
             println!("torch whl exists");
         } else {
@@ -164,10 +165,10 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
             }
             
             output_str = single_file_download(format!("{}\\{}", torch_whl_dir, torch_whl_file), torch_whl_download_url, window.clone()).await.expect("download torch whl failed");
-            window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+            window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
         }
         output_str = funcs::run_python_install_torch(webuipath.clone(), &storage, &window).await;
-        window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+        window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
     }
     if torchvision_installed {
         println!("torchvision is installed");
@@ -185,53 +186,114 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
                 fs::create_dir(torch_whl_dir.clone()).expect("create torch_whl dir failed");
             }
             output_str = single_file_download(format!("{}\\{}", torch_whl_dir, torchvision_whl_file), torchvision_whl_download_url, window.clone()).await.expect("download torchvision whl failed");
-            window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+            window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
         }
         output_str = funcs::run_python_install_torchvision(webuipath.clone(), &storage, &window).await;
-        window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+        window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
     }
-    let _ = window.emit("stdout", Payload {message: "check xformers".to_string()}).unwrap();
+
+    // check if repositories is inside the webui folder
+    let repositories_dir = format!("{}\\repositories", webuipath.clone());
+    let is_dir = Path::new(&repositories_dir).is_dir();
+    if is_dir {
+        println!("repositories dir exists");
+    } else {
+        println!("repositories dir does not exist");
+        fs::create_dir(repositories_dir.clone()).expect("create repositories dir failed");
+    }
+
+    // check if gfpgan is inside the repositories folder todo
+    let name = "GFPGAN";
+    let git_url = "https://github.com/TencentARC/GFPGAN.git";
+    let commit = "8d2447a2d918f8eba5a4a01463fd48e45126a379";
+    let path_dir = format!("{}\\repositories\\{}", webuipath.clone(), &name);
+    let _ = funcs::check_or_clone_repo(name.to_string(), git_url.to_string(), path_dir.to_string(), commit.to_string(), &window);
+
+    let name = "CLIP";
+    let git_url = "https://github.com/openai/CLIP.git";
+    let commit = "d50d76daa670286dd6cacf3bcd80b5e4823fc8e1";
+    let path_dir = format!("{}\\repositories\\{}", webuipath.clone(), &name);
+    let _ = funcs::check_or_clone_repo(name.to_string(), git_url.to_string(), path_dir.to_string(), commit.to_string(), &window);
+
+    let name = "open_clip";
+    let git_url = "https://github.com/mlfoundations/open_clip.git";
+    let commit = "bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b";
+    let path_dir = format!("{}\\repositories\\{}", webuipath.clone(), &name);
+    let _ = funcs::check_or_clone_repo(name.to_string(), git_url.to_string(), path_dir.to_string(), commit.to_string(), &window);
+
+    let name = "stable_diffusion";
+    let git_url = "https://github.com/Stability-AI/stablediffusion.git";
+    let commit = "cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf";
+    let path_dir = format!("{}\\repositories\\stable-diffusion-stability-ai", webuipath.clone());
+    let _ = funcs::check_or_clone_repo(name.to_string(), git_url.to_string(), path_dir.to_string(), commit.to_string(), &window);
+
+    let name = "taming-transformers";
+    let git_url = "https://github.com/CompVis/taming-transformers.git";
+    let commit = "24268930bf1dce879235a7fddd0b2355b84d7ea6";
+    let path_dir = format!("{}\\repositories\\{}", webuipath.clone(), &name);
+    let _ = funcs::check_or_clone_repo(name.to_string(), git_url.to_string(), path_dir.to_string(), commit.to_string(), &window);
+
+    let name = "k-diffusion";
+    let git_url = "https://github.com/crowsonkb/k-diffusion.git";
+    let commit = "5b3af030dd83e0297272d861c19477735d0317ec";
+    let path_dir = format!("{}\\repositories\\{}", webuipath.clone(), &name);
+    let _ = funcs::check_or_clone_repo(name.to_string(), git_url.to_string(), path_dir.to_string(), commit.to_string(), &window);
+
+    let name = "CodeFormer";
+    let git_url = "https://github.com/sczhou/CodeFormer.git";
+    let commit = "c5b4593074ba6214284d6acd5f1719b6c5d739af";
+    let path_dir = format!("{}\\repositories\\{}", webuipath.clone(), &name);
+    let _ = funcs::check_or_clone_repo(name.to_string(), git_url.to_string(), path_dir.to_string(), commit.to_string(), &window);
+
+    let name = "blip";
+    let git_url = "https://github.com/salesforce/BLIP.git";
+    let commit = "48211a1594f1321b00f14c9f7a5b4813144b2fb9";
+    let path_dir = format!("{}\\repositories\\{}", webuipath.clone(), &name);
+    let _ = funcs::check_or_clone_repo(name.to_string(), git_url.to_string(), path_dir.to_string(), commit.to_string(), &window);
+
+
+    let _ = window.emit("stdout", Payload {message: "check xformers".to_string(), stdtype: "stdout".to_string()}).unwrap();
     if funcs::check_if_python_package_installed(webuipath.clone(), "xformers".to_string()).await {
         println!("xformers is installed");
     } else {
-        output_str = funcs::run_python_install_xformers(webuipath.clone(), &&storage, &window).await;
-        window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+        output_str = funcs::run_python_install_xformers(webuipath.clone(), &storage, &window).await;
+        window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
     }
-    let _ = window.emit("stdout", Payload {message: "check codeformer".to_string()}).unwrap();
+    let _ = window.emit("stdout", Payload {message: "check codeformer".to_string(), stdtype: "stdout".to_string()}).unwrap();
     if funcs::check_if_python_package_installed(webuipath.clone(), "lpips".to_string()).await {
         println!("CodeFormer is installed");
     } else {
         output_str = funcs::run_python_install_codeformer(webuipath.clone(), &storage, &window).await;
-        window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+        window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
     }
-    let _ = window.emit("stdout", Payload {message: "check GFPGAN".to_string()}).unwrap();
+    let _ = window.emit("stdout", Payload {message: "check GFPGAN".to_string(), stdtype: "stdout".to_string()}).unwrap();
     if funcs::check_if_python_package_installed(webuipath.clone(), "gfpgan".to_string()).await {
         println!("gfpgan is installed");
     } else {
         output_str = funcs::run_python_install_gfpgan(webuipath.clone(), &storage, &window).await;
-        window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+        window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
     }
     
-    let _ = window.emit("stdout", Payload {message: "check CLIP".to_string()}).unwrap();
+    let _ = window.emit("stdout", Payload {message: "check CLIP".to_string(), stdtype: "stdout".to_string()}).unwrap();
     if funcs::check_if_python_package_installed(webuipath.clone(), "clip".to_string()).await {
         println!("clip is installed");
     } else {
         output_str = funcs::run_python_install_clip(webuipath.clone(), &storage, &window).await;
-        window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+        window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
     }
     
-    let _ = window.emit("stdout", Payload {message: "check open clip".to_string()}).unwrap();
+    let _ = window.emit("stdout", Payload {message: "check open clip".to_string(), stdtype: "stdout".to_string()}).unwrap();
     if funcs::check_if_python_package_installed(webuipath.clone(), "open_clip".to_string()).await {
         println!("open_clip is installed");
     } else {
         println!("open_clip is not installed");
         output_str = funcs::run_python_install_openclip(webuipath.clone(), &storage, &window).await;
-        window.emit("stdout", Payload {message: output_str.clone()}).unwrap();
+        window.emit("stdout", Payload {message: output_str.clone(), stdtype: "stdout".to_string()}).unwrap();
     }
     
     // install requirements
     output_str = funcs::run_python_install_requirements(webuipath.clone(), &storage, &window).await;
-    window.emit("stdout", Payload {message: "Requirements installed".to_string()}).unwrap();
+    window.emit("stdout", Payload {message: "Requirements installed".to_string(), stdtype: "stdout".to_string()}).unwrap();
 
     // start webui
     let py_cmd = format!("{}\\venv\\Scripts\\python.exe", webuipath.clone());
@@ -254,7 +316,7 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
         .for_each(|line| {
             println!("{}", line);
             // to emit the line to the UI, you can use the `emit` method
-            window.emit("stdout", Payload {message: line}).unwrap();
+            window.emit("stdout", Payload {message: line, stdtype: "stdout".to_string()}).unwrap();
         });
 
     Ok("".to_string())
@@ -280,23 +342,22 @@ async fn start_llama( modelpath: String, storage: State<'_, Storage>, window: Wi
     window.listen("llamamsg", move |event| {
         let payload: serde_json::Value = serde_json::from_str(event.payload().unwrap()).unwrap();
         let msg = payload["message"].as_str().unwrap();
-        println!("msg: {}", msg);
-        let msgbit = msg.as_bytes();
-        println!("msgbit: {:?}", msgbit);
-        let mut msg_vec = msgbit.to_vec();
-        msg_vec.push(b'\n');
+        let msg = format!("{}\n", msg);
         child
             .lock()
             .unwrap()
-            .write(&msg_vec)
+            .write(msg.as_bytes())
             .unwrap();
     });
 
     tauri::async_runtime::spawn(async move {
       while let Some(event) = rx.recv().await {
         println!("EVENT RECEIVED {:?}", event);
+        if let tauri::api::process::CommandEvent::Stderr(line) = &event {
+          window.emit("llamamsg", Payload {message: line.clone(), stdtype: "stdout".to_string()}).unwrap();
+        }
         if let tauri::api::process::CommandEvent::Stdout(line) = event {
-          println!("STDOUT from sidecar....: {}", line);
+            window.emit("llamamsg", Payload {message: line, stdtype: "stdout".to_string()}).unwrap();
         }
       }
     });
