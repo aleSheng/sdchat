@@ -223,7 +223,7 @@ export type MsgBox = {
   setOpen: (isOpen: boolean) => void
 }
 export const useMsgBox = create<MsgBox>()((set) => ({
-  isOpen: false,
+  isOpen: true,
   setOpen: (isOpen: boolean) => set((_state) => ({ isOpen })),
 }))
 

@@ -139,8 +139,8 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
     println!("pip config output: {}", pip_config_output);
     
     let torch_whl_dir = format!("{}\\torch_whl", webuipath.clone());
-    let torch_whl_file = "torch-1.13.1+cu117-cp310-cp310-win_amd64.whl".to_string();
-    let torchvision_whl_file = "torchvision-0.14.2+cu117-cp310-cp310-win_amd64.whl".to_string();
+    let torch_whl_file = "torch-2.0.0+cu117-cp310-cp310-win_amd64.whl".to_string();
+    let torchvision_whl_file = "torchvision-0.15.1+cu117-cp310-cp310-win_amd64.whl".to_string();
     let torch_whl_download_url = "https://download.pytorch.org/whl/cu117/torch-2.0.0%2Bcu117-cp310-cp310-win_amd64.whl".to_string();
     let torchvision_whl_download_url = "https://download.pytorch.org/whl/cu117/torchvision-0.15.1%2Bcu117-cp310-cp310-win_amd64.whl".to_string();
 
@@ -300,9 +300,13 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
 
     let child = Command::new(py_cmd)
         .arg("-u")
-        .arg("launch.py")
+        .arg("webui.py")
+        .arg("--skip-version-check")
+        .arg("--xformers")
+        .arg("--deepdanbooru")
+        .arg("--api")
+        .arg("--cors-allow-origins=http://localhost:3000")
         .current_dir(webuipath.clone())
-        .env("COMMANDLINE_ARGS", "--xformers --deepdanbooru --api --cors-allow-origins=http://localhost:3000")
         .stdout(Stdio::piped())
         .spawn()
         .unwrap();
@@ -324,9 +328,10 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
 
 #[tauri::command]
 async fn stop_llama(storage: State<'_, Storage>) -> Result<String, String> {
-    let pid = storage.store.lock().unwrap().get(&"llamapid".to_string()).unwrap().to_string();
+    let pid = storage.store.lock().unwrap().get(&"llamapid".to_string()).expect("llamapid not found").to_string();
     let output = funcs::kill_proc(pid).await;
-    println!("output: {}", output.to_string());
+    println!("stop llama output: {}", output.to_string());
+    storage.store.lock().unwrap().remove_entry(&"llamapid".to_string()).expect("llamapid not found");
     Ok(output.to_string())
 }
 #[tauri::command]

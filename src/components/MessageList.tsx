@@ -142,6 +142,7 @@ export function MessageList() {
     <>
       {talkToType === "llama" && (
         <div className="flex p-2 btn-group bg-base-300">
+          <button className="btn btn-accent">Llama Model Path:</button>
           <button className="btn btn-outline" onClick={onSelectLlamaModelClick}>
             {llama_model_path}
           </button>
@@ -154,9 +155,9 @@ export function MessageList() {
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
                 className="lucide lucide-play"
               >
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>

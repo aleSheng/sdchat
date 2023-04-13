@@ -4,10 +4,8 @@ import { ChatBar } from "@/components/ChatBar"
 import { MessageList } from "@/components/MessageList"
 import { PromptBook } from "@/components/PromptBook"
 import { Settings } from "@/components/Settings"
-import { useWebuiUrl } from "@/lib/chatbot"
 
-export const ChatView = ({ webui_url }: { webui_url: string }) => {
-  useWebuiUrl.getState().setWebuiUrl(webui_url)
+export const ChatView = () => {
   return (
     <>
       <div className="grow carousel w-full">

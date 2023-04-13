@@ -1,5 +1,3 @@
-import { useState } from "react"
-
 import { openLink } from "@/lib/api"
 
 interface WebUIViewProps {
@@ -14,7 +12,7 @@ export const WebUIView: React.FC<WebUIViewProps> = ({ url }: WebUIViewProps) => 
   return url ? (
     <>
       <div className="flex-1 p-2 btn-group bg-base-300">
-        <button className="btn btn-outline">{url}</button>
+        <button className="btn btn-outline">WebUI is Running on {url}</button>
         <button className="btn btn-primary" onClick={openInBrowser}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -23,9 +21,9 @@ export const WebUIView: React.FC<WebUIViewProps> = ({ url }: WebUIViewProps) => 
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             className="lucide lucide-external-link"
           >
             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>

@@ -9,6 +9,7 @@ import { themeChange } from "theme-change"
 
 import {
   ChatViewMenu,
+  ConfigMenu,
   ModelsMenu,
   PromptsMenu,
   QuickStartMenu,
@@ -21,6 +22,7 @@ import { StartView } from "@/containers/StartView"
 import { WebUIView } from "@/containers/WebUIView"
 import { useGlobalShortcut } from "@/hooks/tauri/shortcuts"
 import { listen } from "@/lib/api"
+import { useWebuiUrl } from "@/lib/chatbot"
 import { open } from "@/lib/dialog"
 import useStore from "@/lib/store"
 
@@ -46,6 +48,9 @@ const Home: NextPage = () => {
   }, [])
 
   const onSelectDirClick = () => {
+    if (running) {
+      return
+    }
     void (async () => {
       // Open a selection dialog for directories
       const selected = await open({
@@ -85,6 +90,7 @@ const Home: NextPage = () => {
       setErrorInfo("Please select a folder first")
       return
     }
+    setShellOutput([])
     setRunning(true)
     const unlisten = listen("stdout", (data: any) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -98,6 +104,7 @@ const Home: NextPage = () => {
         const url: string = line.match(regex)[0]
         if (url) {
           setWebuiUrl(url)
+          useWebuiUrl.getState().setWebuiUrl(url)
         }
       }
     })
@@ -119,12 +126,14 @@ const Home: NextPage = () => {
         ;(await unlisten_download)()
         setRunning(false)
         setWebuiUrl("")
+        useWebuiUrl.getState().setWebuiUrl("")
       })
       .catch(async (err) => {
         ;(await unlisten)()
         ;(await unlisten_download)()
         setRunning(false)
         setWebuiUrl("")
+        useWebuiUrl.getState().setWebuiUrl("")
         console.error(err)
       })
   }
@@ -166,11 +175,34 @@ const Home: NextPage = () => {
             </button>
             {running ? (
               <>
-                <button className="btn btn-lg btn-accent loading">Running</button>
-                {webui_url && (
-                  <button className="btn btn-lg btn-primary" onClick={onOpenWebUIClick}>
-                    Open WebUI
-                  </button>
+                {webui_url ? (
+                  <>
+                    <button className="btn btn-lg btn-primary">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-folder-check"
+                      >
+                        <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path>
+                        <path d="m9 13 2 2 4-4"></path>
+                      </svg>
+                    </button>
+                    <button
+                      className="btn btn-lg btn-primary"
+                      onClick={onOpenWebUIClick}
+                    >
+                      Open WebUI
+                    </button>
+                  </>
+                ) : (
+                  <button className="btn btn-lg btn-warning loading">Starting</button>
                 )}
                 <button className="btn btn-lg" onClick={onStopWebuiClick}>
                   <svg
@@ -192,31 +224,56 @@ const Home: NextPage = () => {
             ) : (
               <>
                 <button onClick={onStartWebuiClick} className="btn btn-lg btn-primary">
-                  Start
+                  Start WebUI
                 </button>
               </>
             )}
           </div>
         </div>
-        <main className="flex flex-1 flex-col w-full overflow-y-hidden">
-          {menu === QuickStartMenu.key && (
-            <StartView
-              store={store}
-              output_lines={shellOutput}
-              downloading={downloading}
-              downloadingFile={downloadingFile}
-              downloadProgress={downloadProgress}
-            ></StartView>
-          )}
-          {menu === WebUIMenu.key && <WebUIView url={webui_url} />}
-          {menu === ChatViewMenu.key && <ChatView webui_url={webui_url} />}
-          {menu === ModelsMenu.key && <ModelsView />}
-          {menu === PromptsMenu.key && (
-            <button onClick={onSelectDirClick} className="btn btn-lg">
-              {store.settings.work_folder}
-            </button>
-          )}
+        <main
+          className={`flex flex-1 flex-col w-full overflow-y-hidden ${
+            menu === QuickStartMenu.key ? "" : "hidden"
+          }`}
+        >
+          <StartView
+            store={store}
+            output_lines={shellOutput}
+            downloading={downloading}
+            downloadingFile={downloadingFile}
+            downloadProgress={downloadProgress}
+          ></StartView>
         </main>
+        <main
+          className={`flex flex-1 flex-col w-full overflow-y-hidden ${
+            menu === WebUIMenu.key ? "" : "hidden"
+          }`}
+        >
+          <WebUIView url={webui_url} />
+        </main>
+        <main
+          className={`flex flex-1 flex-col w-full overflow-y-hidden ${
+            menu === ChatViewMenu.key ? "" : "hidden"
+          }`}
+        >
+          <ChatView />
+        </main>
+        <main
+          className={`flex flex-1 flex-col w-full overflow-y-hidden ${
+            menu === ModelsMenu.key ? "" : "hidden"
+          }`}
+        >
+          <ModelsView />
+        </main>
+        <main
+          className={`flex flex-1 flex-col w-full overflow-y-hidden ${
+            menu === PromptsMenu.key ? "" : "hidden"
+          }`}
+        ></main>
+        <main
+          className={`flex flex-1 flex-col w-full overflow-y-hidden ${
+            menu === ConfigMenu.key ? "" : "hidden"
+          }`}
+        ></main>
       </div>
       <div className="drawer-side">
         <label htmlFor="my-drawer" className="drawer-overlay"></label>

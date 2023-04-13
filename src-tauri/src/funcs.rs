@@ -299,7 +299,7 @@ pub async fn check_if_file_exists(dir_path:String, file_path: String) -> bool {
  * Kill a process tree
  */
 pub async fn kill_proc(pid: String) -> String {
-    let output = if cfg!(target_os = "windows") {
+    let _ = if cfg!(target_os = "windows") {
         Command::new("taskkill")
             .args(["/pid", &pid.to_string(), "/T", "/F"])
             .output()
@@ -311,6 +311,7 @@ pub async fn kill_proc(pid: String) -> String {
             .output()
             .expect("Failed to kill process tree")
     };
-    let output_str = String::from_utf8(output.stdout).expect("Failed to kill process tree");
-    output_str
+    // let output_str = String::from_utf8(output.stdout).expect("Failed to kill process tree");
+    // output_str
+    "".to_string()
 }

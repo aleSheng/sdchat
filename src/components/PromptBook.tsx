@@ -4,16 +4,12 @@ import React from "react"
 import { useChatBar, usePromptBook } from "@/lib/chatbot"
 
 export function PromptBook() {
-  const [prompts, addPrompt, deletePrompt, setPrompts, open, setOpen] = usePromptBook(
-    (state) => [
-      state.prompts,
-      state.addPrompt,
-      state.deletePrompt,
-      state.setPrompts,
-      state.isOpen,
-      state.setOpen,
-    ],
-  )
+  const [prompts, addPrompt, deletePrompt, setPrompts] = usePromptBook((state) => [
+    state.prompts,
+    state.addPrompt,
+    state.deletePrompt,
+    state.setPrompts,
+  ])
 
   const [prompt, setPrompt] = useChatBar((state) => [state.prompt, state.setPrompt])
 
@@ -34,12 +30,12 @@ export function PromptBook() {
   }, [setPrompts])
 
   return (
-    <div className="h-full w-full max-w-[60rem] overflow-y-auto duration-200 flex flex-col gap-1 p-2 bg-base-100">
+    <div className="btn-group btn-group-vertical h-full w-full max-w-[60rem] overflow-y-auto duration-200 flex flex-col gap-1 p-2 bg-base-100">
       {prompts.length > 0 ? (
         <>
           {prompt && !prompts.includes(prompt) && (
             <button
-              className="flex flex-row justify-between items-center w-full border border-white/10 hover:border-white/20 border-dashed duration-150 rounded"
+              className="btn flex flex-row justify-between items-center w-full duration-150 rounded"
               onClick={() => {
                 addPrompt(prompt)
               }}
@@ -52,10 +48,9 @@ export function PromptBook() {
           {prompts.map((prompt, i) => (
             <button
               key={prompt}
-              className="flex flex-row justify-between group relative items-center border-b last-of-type:border-none pb-2 last-of-type:pb-0 border-white/10 w-full"
+              className="btn btn-outline flex flex-row justify-between group relative items-center w-full"
               onClick={() => {
                 setPrompt(prompt)
-                setOpen(false)
               }}
             >
               <p className="text-sm text-left break-word max-h-[5rem] overflow-hidden text-ellipsis">
