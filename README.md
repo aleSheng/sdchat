@@ -16,6 +16,15 @@ English | [简体中文](./README.cn.md)
 6. Multiple themes by DaisyUI
 7. Sidecar with Llama.cpp main executable
 
+## Usage
+
+1. Download the sdchat.exe and install it on Windows
+2. On the Quick Start, select the folder which is the [stable diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) located.
+3. Click Start WebUI button, and wait for it finishing running.
+4. If no error, the WebUI should be up and running, then click the Open WebUI button.
+5. Or, you click WebUI menu on the right sidebar.
+6. Click Chat menu, type to Chat with stable diffusion.
+
 ## Screenshots
 
 ![Screenshot](./docs/start.jpg)
