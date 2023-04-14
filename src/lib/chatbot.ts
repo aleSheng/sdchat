@@ -173,9 +173,9 @@ export const sendPromptMessage = async (
         model: settings.model,
         width: settings.width,
         height: settings.height,
-        count: settings.count,
+        batch_size: settings.count,
         steps: settings.steps,
-        scale: settings.scale,
+        cfg_scale: settings.scale,
         session: sessionID,
       }),
     })
