@@ -267,7 +267,6 @@ export type Settings = {
   count: number
   steps: number
   scale: number
-  modify: boolean
 }
 
 export type SettingsState = {
@@ -295,7 +294,6 @@ export const useSettings = create<SettingsState>()((set) => ({
     count: 4,
     steps: 30,
     scale: 7,
-    modify: true,
   } as Settings,
   setSettings: (settings: Settings) =>
     set((state: SettingsState) => ({
@@ -305,11 +303,11 @@ export const useSettings = create<SettingsState>()((set) => ({
   isOpen: false,
   setOpen: (isOpen: boolean) => set((state: SettingsState) => ({ isOpen })),
 
-  llama_model_path: "F:\\ai\\gptworks\\llama.cpp\\zh-models\\13B\\ggml-model-q4_0.bin",
+  llama_model_path: "Please select a llama model",
   setLlamaModelPath: (path: string) =>
     set((state: SettingsState) => ({ llama_model_path: path })),
 
-  talkToType: "llama",
+  talkToType: "sd",
   setTalkToType: (type) => set((state: SettingsState) => ({ talkToType: type })),
 
   llamaStatus: "inactive",

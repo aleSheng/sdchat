@@ -54,6 +54,9 @@ export function MessageList() {
   }
 
   const onStartLlamaClick = () => {
+    if (useSettings.getState().llama_model_path === "Please select a llama model") {
+      return
+    }
     const unlisten = listen("llamamsg", (data: any) => {
       const llamaStatus = useSettings.getState().llamaStatus
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access

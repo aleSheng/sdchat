@@ -30,12 +30,12 @@ export function PromptBook() {
   }, [setPrompts])
 
   return (
-    <div className="btn-group btn-group-vertical h-full w-full max-w-[60rem] overflow-y-auto duration-200 flex flex-col gap-1 p-2 bg-base-100">
+    <div className="h-full w-full max-w-[60rem] overflow-y-auto duration-200 flex flex-col gap-1 p-2 bg-base-100">
       {prompts.length > 0 ? (
         <>
           {prompt && !prompts.includes(prompt) && (
-            <button
-              className="btn flex flex-row justify-between items-center w-full duration-150 rounded"
+            <div
+              className="btn flex flex-row justify-between items-center w-full duration-150"
               onClick={() => {
                 addPrompt(prompt)
               }}
@@ -43,21 +43,21 @@ export function PromptBook() {
               <p className="text-center p-2 w-full text-sm font-semibold flex flex-row items-center justify-center gap-2">
                 Save Current prompt <Plus className="w-4 h-4" />
               </p>
-            </button>
+            </div>
           )}
           {prompts.map((prompt, i) => (
-            <button
+            <div
               key={prompt}
-              className="btn btn-outline flex flex-row justify-between group relative items-center w-full"
+              className="btn-group btn-group-horizontal flex flex-row justify-between group relative items-center w-full"
               onClick={() => {
                 setPrompt(prompt)
               }}
             >
-              <p className="text-sm text-left break-word max-h-[5rem] overflow-hidden text-ellipsis">
+              <div className="btn btn-outline shrink flex-grow text-sm text-left break-word max-h-[5rem] overflow-hidden text-ellipsis">
                 {prompt}
-              </p>
+              </div>
               <div
-                className="flex justify-center absolute top-0 right-0 items-center w-6 h-6 hover:bg-[#32363d] text-red-500 hover:text-bold bg-[#292d33] opacity-0 group-hover:opacity-100 rounded-full duration-100"
+                className="btn"
                 onClick={(e) => {
                   e.stopPropagation()
                   deletePrompt(prompt)
@@ -65,7 +65,7 @@ export function PromptBook() {
               >
                 <X className="w-4 h-4" />
               </div>
-            </button>
+            </div>
           ))}
         </>
       ) : (
