@@ -30,7 +30,7 @@ export function MessageList() {
     state.llamaStatus,
     state.setLlamaStatus,
     state.talkToType,
-    state.settings,
+    state.sdsettings,
   ])
 
   const onSelectLlamaModelClick = () => {

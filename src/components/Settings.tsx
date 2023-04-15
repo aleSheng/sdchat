@@ -3,8 +3,8 @@ import { useSettings } from "@/lib/chatbot"
 
 export function Settings() {
   const [settings, setSettings] = useSettings((state) => [
-    state.settings,
-    state.setSettings,
+    state.sdsettings,
+    state.setSDSettings,
   ])
 
   return (

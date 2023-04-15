@@ -305,6 +305,7 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
         .arg("--xformers")
         .arg("--deepdanbooru")
         .arg("--api")
+        .arg("--no-gradio-queue")
         .arg("--cors-allow-origins=http://localhost:3000")
         .current_dir(webuipath.clone())
         .stdout(Stdio::piped())

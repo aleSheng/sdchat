@@ -23,7 +23,7 @@ export type MessageType = {
   prompt: string
   error: string | null
   images: string[]
-  settings: Settings | null
+  settings: SDSettings | null
 }
 
 export type ChatBarType = {

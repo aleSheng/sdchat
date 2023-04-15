@@ -113,22 +113,12 @@ export const Message = ({ message }: { message: MessageType }) => {
           )}
         {message.type === MessageTypeEnum.SD && (
           <div className="flex flex-row flex-wrap gap-2 my-2">
-            {message.status === MessageStatusEnum.ERROR && (
-              <button
-                className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
-                onClick={() => {
-                  void sendPromptMessage(url, message.prompt, talkToType)
-                }}
-              >
-                Retry
-              </button>
-            )}
             {message.status === MessageStatusEnum.RECEIVED && (
               <>
                 <button
                   className="border-white/10 border rounded px-3 py-1 font-semibold hover:bg-backgroundSecondary duration-200"
                   onClick={() => {
-                    void sendPromptMessage(url, message.prompt, talkToType)
+                    void sendPromptMessage(message.prompt)
                   }}
                 >
                   <svg
