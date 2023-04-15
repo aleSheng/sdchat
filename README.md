@@ -18,7 +18,7 @@ English | [简体中文](./README.cn.md)
 
 ## Usage
 
-1. Download the sdchat.exe and install it on Windows
+1. Download the sdchat.msi from Releases and install it on Windows
 2. On the Quick Start, select the folder which is the [stable diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) located.
 3. Click Start WebUI button, and wait for it finishing running.
 4. If no error, the WebUI should be up and running, then click the Open WebUI button.

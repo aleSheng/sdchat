@@ -4,8 +4,9 @@ import { windowEmit } from "./api"
 
 export enum MessageTypeEnum {
   YOU = "you",
-  SD = "stable diffusion",
+  SD = "sd",
   LLAMA = "llama",
+  OPENAI = "openai",
   SYSTEM = "system",
 }
 export enum MessageStatusEnum {
@@ -106,17 +107,16 @@ export const getLastNMessages = (n: number) => {
   return values.sort((a, b) => b.timestamp - a.timestamp).slice(0, n)
 }
 
-export const sendPromptMessage = async (
-  webui_url: string,
-  prompt: string,
-  talkToType: "llama" | "sd",
-) => {
+export const sendPromptMessage = async (prompt: string) => {
   if (!prompt) return
 
-  const settings = useSettings.getState().settings
+  const talkToType = useSettings.getState().talkToType
+  const webui_url = useWebuiUrl.getState().url
+
   useSettings.getState().setOpen(false)
   useChatBar.getState().setPrompt("")
 
+  // Add a new message to the message list send by you
   const uid = makeId()
   const newMsg: MessageType = {
     type: MessageTypeEnum.YOU,
@@ -125,11 +125,12 @@ export const sendPromptMessage = async (
     timestamp: Date.now(),
     error: null,
     images: [],
-    settings: settings,
+    settings: null,
     status: MessageStatusEnum.LOADING,
   }
   useMessageList.getState().addMessage(newMsg)
 
+  // Send the prompt to the backend and create a new message waiting for response
   if (talkToType === "llama") {
     void windowEmit("llamamsg", { message: prompt })
     const uid = makeId()
@@ -140,82 +141,101 @@ export const sendPromptMessage = async (
       timestamp: Date.now(),
       error: null,
       images: [],
-      settings: settings,
+      settings: null,
       status: MessageStatusEnum.LOADING,
     }
     useMessageList.getState().addMessage(loadingMsg)
 
     useMessageList.getState().loading_msg_id = loadingMsg.id
     return
-  }
+  } else if (talkToType === "openai") {
+    const uid = makeId()
+    const loadingMsg: MessageType = {
+      type: MessageTypeEnum.OPENAI,
+      id: uid,
+      prompt: "",
+      timestamp: Date.now(),
+      error: null,
+      images: [],
+      settings: null,
+      status: MessageStatusEnum.LOADING,
+    }
+    useMessageList.getState().addMessage(loadingMsg)
 
-  let res = null
+    useMessageList.getState().loading_msg_id = loadingMsg.id
 
-  const reply_msg: MessageType = {
-    type: MessageTypeEnum.SD,
-    id: makeId(),
-    prompt: prompt,
-    timestamp: Date.now(),
-    error: null,
-    images: [],
-    settings: newMsg.settings,
-    status: MessageStatusEnum.LOADING,
-  }
-  useMessageList.getState().addMessage(reply_msg)
-  useMessageList.getState().loading_msg_id = reply_msg.id
+    //TODO
 
-  try {
-    res = await fetch(`${webui_url}/sdapi/v1/txt2img`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt: prompt,
-        model: settings.model,
-        width: settings.width,
-        height: settings.height,
-        batch_size: settings.count,
-        steps: settings.steps,
-        cfg_scale: settings.scale,
-        session: sessionID,
-      }),
-    })
-  } catch (e) {
-    console.log(e)
-  }
+    return
+  } else if (talkToType === "sd") {
+    let res = null
+    const sdsettings = useSettings.getState().sdsettings
+    const reply_msg: MessageType = {
+      type: MessageTypeEnum.SD,
+      id: makeId(),
+      prompt: prompt,
+      timestamp: Date.now(),
+      error: null,
+      images: [],
+      settings: sdsettings,
+      status: MessageStatusEnum.LOADING,
+    }
+    useMessageList.getState().addMessage(reply_msg)
+    useMessageList.getState().loading_msg_id = reply_msg.id
 
-  if (!res || !res.ok) {
-    switch (res?.status) {
-      case 400:
-        reply_msg.error = "Bad request"
-        break
-      case 429:
-        reply_msg.error = "You're too fast! Slow down!"
-        break
-      default:
-        reply_msg.error = "Something went wrong"
-        break
+    try {
+      res = await fetch(`${webui_url}/sdapi/v1/txt2img`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: prompt,
+          model: sdsettings.model,
+          width: sdsettings.width,
+          height: sdsettings.height,
+          batch_size: sdsettings.count,
+          steps: sdsettings.steps,
+          cfg_scale: sdsettings.scale,
+          session: sessionID,
+        }),
+      })
+    } catch (e) {
+      console.log(e)
     }
 
-    reply_msg.status = MessageStatusEnum.ERROR
-    useMessageList.getState().editMessage(reply_msg.id, newMsg)
-    return
-  }
+    if (!res || !res.ok) {
+      switch (res?.status) {
+        case 400:
+          reply_msg.error = "Bad request"
+          break
+        case 429:
+          reply_msg.error = "You're too fast! Slow down!"
+          break
+        default:
+          reply_msg.error = "Something went wrong"
+          break
+      }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const data = await res.json()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-  reply_msg.images = data.images
+      reply_msg.status = MessageStatusEnum.ERROR
+      useMessageList.getState().editMessage(reply_msg.id, newMsg)
+      return
+    }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  if (data.length === 0) {
-    reply_msg.error = "No results"
-    reply_msg.status = MessageStatusEnum.ERROR
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const data = await res.json()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    reply_msg.images = data.images
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (data.length === 0) {
+      reply_msg.error = "No results"
+      reply_msg.status = MessageStatusEnum.ERROR
+      useMessageList.getState().editMessage(reply_msg.id, reply_msg)
+      return
+    }
+    reply_msg.status = MessageStatusEnum.RECEIVED
+
     useMessageList.getState().editMessage(reply_msg.id, reply_msg)
-    return
   }
-  reply_msg.status = MessageStatusEnum.RECEIVED
-
-  useMessageList.getState().editMessage(reply_msg.id, reply_msg)
 }
 // msg box
 export type MsgBox = {
@@ -256,7 +276,7 @@ export const usePromptBook = create<PromptBook>()((set) => ({
 
 // settings
 
-export type Settings = {
+export type SDSettings = {
   model:
     | "stable-diffusion-v1-5"
     | "stable-diffusion-512-v2-1"
@@ -268,10 +288,14 @@ export type Settings = {
   steps: number
   scale: number
 }
+export type Openai_Settings = {
+  key: string
+  host: string
+}
 
 export type SettingsState = {
-  settings: Settings
-  setSettings: (settings: Settings) => void
+  sdsettings: SDSettings
+  setSDSettings: (settings: SDSettings) => void
 
   isOpen: boolean
   setOpen: (isOpen: boolean) => void
@@ -279,25 +303,28 @@ export type SettingsState = {
   llama_model_path: string
   setLlamaModelPath: (path: string) => void
 
-  talkToType: "llama" | "sd"
-  setTalkToType: (type: "llama" | "sd") => void
+  talkToType: MessageTypeEnum
+  setTalkToType: (type: MessageTypeEnum) => void
 
   llamaStatus: "inactive" | "loading" | "error" | "active"
   setLlamaStatus: (status: "inactive" | "loading" | "error" | "active") => void
+
+  openai_settings: Openai_Settings
+  setOpenaiSettings: (settings: Openai_Settings) => void
 }
 
 export const useSettings = create<SettingsState>()((set) => ({
-  settings: {
+  sdsettings: {
     model: "stable-diffusion-v1-5",
     width: 512,
     height: 512,
     count: 4,
     steps: 30,
     scale: 7,
-  } as Settings,
-  setSettings: (settings: Settings) =>
+  } as SDSettings,
+  setSDSettings: (settings: SDSettings) =>
     set((state: SettingsState) => ({
-      settings: { ...state.settings, ...settings },
+      sdsettings: { ...state.sdsettings, ...settings },
     })),
 
   isOpen: false,
@@ -307,9 +334,18 @@ export const useSettings = create<SettingsState>()((set) => ({
   setLlamaModelPath: (path: string) =>
     set((state: SettingsState) => ({ llama_model_path: path })),
 
-  talkToType: "sd",
+  talkToType: MessageTypeEnum.SD,
   setTalkToType: (type) => set((state: SettingsState) => ({ talkToType: type })),
 
   llamaStatus: "inactive",
   setLlamaStatus: (status) => set((state: SettingsState) => ({ llamaStatus: status })),
+
+  openai_settings: {
+    key: "",
+    host: "https://api.openai.com/v1",
+  } as Openai_Settings,
+  setOpenaiSettings: (settings) =>
+    set((state: SettingsState) => ({
+      openai_settings: { ...state.openai_settings, ...settings },
+    })),
 }))

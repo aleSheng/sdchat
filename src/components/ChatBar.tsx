@@ -1,13 +1,13 @@
 import { Album, Send, Settings2 } from "lucide-react"
 
 import {
+  MessageTypeEnum,
   sendPromptMessage,
   useChatBar,
   useMessageList,
   useMsgBox,
   usePromptBook,
   useSettings,
-  useWebuiUrl,
 } from "@/lib/chatbot"
 
 export const ChatBar = () => {
@@ -16,7 +16,6 @@ export const ChatBar = () => {
     state.setTalkToType,
   ])
   const [prompt, setPrompt] = useChatBar((state) => [state.prompt, state.setPrompt])
-  const [url] = useWebuiUrl((state) => [state.url, state.setWebuiUrl])
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const [msgboxOpen, setMsgboxOpen] = useMsgBox((state) => [
@@ -42,11 +41,11 @@ export const ChatBar = () => {
   }
 
   const onSelectLlamaType = () => {
-    setTalkToType("llama")
+    setTalkToType(MessageTypeEnum.LLAMA)
   }
 
   const onSelectSDType = () => {
-    setTalkToType("sd")
+    setTalkToType(MessageTypeEnum.SD)
   }
 
   return (
@@ -137,7 +136,7 @@ export const ChatBar = () => {
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                void sendPromptMessage(url, prompt, talkToType)
+                void sendPromptMessage(prompt)
                 e.preventDefault()
               } else if (
                 e.key === "ArrowUp" &&
@@ -165,7 +164,7 @@ export const ChatBar = () => {
             <button
               className={String(prompt ? "cursor-pointer" : "cursor-default")}
               // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onClick={() => sendPromptMessage(url, prompt, talkToType)}
+              onClick={() => sendPromptMessage(prompt)}
             >
               <Send
                 className={`text-accent rotate-45 ${
