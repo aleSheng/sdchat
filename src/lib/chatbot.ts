@@ -113,6 +113,8 @@ export const sendPromptMessage = async (prompt: string) => {
   const talkToType = useSettings.getState().talkToType
   const webui_url = useWebuiUrl.getState().url
 
+  if (talkToType === MessageTypeEnum.SD && !webui_url) return
+
   useSettings.getState().setOpen(false)
   useChatBar.getState().setPrompt("")
 

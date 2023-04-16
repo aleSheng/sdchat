@@ -64,45 +64,45 @@ pub fn check_or_clone_webui(webui_url: String, webui_path: String, window: &Wind
     if is_file {
         println!("webui.py exists");
         let _ = window.emit("stdout", Payload {message: "webui.py exists".to_string(), stdtype: "stdout".to_string()}).unwrap();
-        // git pull to update
-        let repo = git2::Repository::open(webui_path).unwrap();
-        let mut remote = repo.find_remote("origin").unwrap();
-        let mut cb = git2::RemoteCallbacks::new();
-        cb.credentials(|_url, username_from_url, _allowed_types| {
-            git2::Cred::ssh_key_from_agent(username_from_url.unwrap())
-        });
+        // TODO git pull to update
+        // let repo = git2::Repository::open(webui_path).unwrap();
+        // let mut remote = repo.find_remote("origin").unwrap();
+        // let mut cb = git2::RemoteCallbacks::new();
+        // cb.credentials(|_url, username_from_url, _allowed_types| {
+        //     git2::Cred::ssh_key_from_agent(username_from_url.unwrap())
+        // });
 
-        // Print out our transfer progress.
-        cb.transfer_progress(|stats| {
-            if stats.received_objects() == stats.total_objects() {
-                print!(
-                    "Resolving deltas {}/{}\r",
-                    stats.indexed_deltas(),
-                    stats.total_deltas()
-                );
-            } else if stats.total_objects() > 0 {
-                print!(
-                    "Received {}/{} objects ({}) in {} bytes\r",
-                    stats.received_objects(),
-                    stats.total_objects(),
-                    stats.indexed_objects(),
-                    stats.received_bytes()
-                );
-            }
-            true
-        });
+        // // Print out our transfer progress.
+        // cb.transfer_progress(|stats| {
+        //     if stats.received_objects() == stats.total_objects() {
+        //         print!(
+        //             "Resolving deltas {}/{}\r",
+        //             stats.indexed_deltas(),
+        //             stats.total_deltas()
+        //         );
+        //     } else if stats.total_objects() > 0 {
+        //         print!(
+        //             "Received {}/{} objects ({}) in {} bytes\r",
+        //             stats.received_objects(),
+        //             stats.total_objects(),
+        //             stats.indexed_objects(),
+        //             stats.received_bytes()
+        //         );
+        //     }
+        //     true
+        // });
 
-        let mut fo = git2::FetchOptions::new();
-        fo.remote_callbacks(cb);
-        // Always fetch all tags.
-        // Perform a download and also update tips
-        fo.download_tags(git2::AutotagOption::All);
-        println!("Fetching {} for repo", remote.name().unwrap());
-        remote.fetch(&["master"], Some(&mut fo), None).unwrap();
+        // let mut fo = git2::FetchOptions::new();
+        // fo.remote_callbacks(cb);
+        // // Always fetch all tags.
+        // // Perform a download and also update tips
+        // fo.download_tags(git2::AutotagOption::All);
+        // println!("Fetching {} for repo", remote.name().unwrap());
+        // remote.fetch(&["master"], Some(&mut fo), None).unwrap();
 
-        let fetch_head = repo.find_reference("FETCH_HEAD").unwrap();
-        let fetch_commit = repo.reference_to_annotated_commit(&fetch_head).unwrap();
-        do_merge(&repo, &"master", fetch_commit).unwrap();
+        // let fetch_head = repo.find_reference("FETCH_HEAD").unwrap();
+        // let fetch_commit = repo.reference_to_annotated_commit(&fetch_head).unwrap();
+        // do_merge(&repo, &"master", fetch_commit).unwrap();
 
     } else {
         println!("webui.py does not exist. Cloning repository...");
