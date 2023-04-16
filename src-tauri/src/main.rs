@@ -49,7 +49,6 @@ fn main() {
             detect_git,
             detect_python,
             get_gpu_info,
-            get_latest_image,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -97,12 +96,6 @@ async fn detect_git() -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn get_latest_image(dir_path: String) -> String {
-    // latest_image_old(dir_path, elapsed)
-    funcs::latest_image(dir_path)
-}
-
-#[tauri::command]
 async fn stop_webui(storage: State<'_, Storage>) -> Result<String, String> {
     let pid = storage.store.lock().unwrap().get(&"pid".to_string()).unwrap().to_string();
     let output = funcs::kill_proc(pid).await;
@@ -113,6 +106,10 @@ async fn stop_webui(storage: State<'_, Storage>) -> Result<String, String> {
 #[tauri::command]
 async fn start_webui(webuipath: String, window: Window, storage: State<'_, Storage>) -> Result<String, String> {
     let _ = window.emit("stdout", Payload {message:"initializing webui".to_string(), stdtype: "stdout".to_string()}).unwrap();
+    // git clone webui from github
+    let webui_github_url = "https://github.com/AUTOMATIC1111/stable-diffusion-webui.git".to_string();
+    let _ = funcs::check_or_clone_webui(webui_github_url, webuipath.clone(), &window);
+
     let mut output_str = format!("Command init_webui: {}", webuipath);
     println!("{}", output_str);
     let venv_dir = format!("{}\\venv", webuipath.clone());

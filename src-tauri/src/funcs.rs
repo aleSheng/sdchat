@@ -8,125 +8,6 @@ pub struct Storage {
     pub store: Mutex<HashMap<String, String>>,
 }
 
-// Get the latest image created in the output directory
-pub fn latest_image(dir_path: String) -> String {
-    let mut files: Vec<(String, SystemTime)> = Vec::new();
-    let mut file_name: String;
-    let mut metadata: Metadata;
-
-    for entry in fs::read_dir(dir_path).unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-
-        metadata = fs::metadata(&path).unwrap();
-
-        // get the modified date
-        let _modified = metadata.modified().unwrap();
-
-        // get the created date
-        let created = metadata.created().unwrap();
-
-        let _file_type = metadata.file_type();
-
-        let file_extension = path
-            .extension()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or_default()
-            .to_string();
-
-        file_name = path
-            .file_name()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap()
-            .to_string();
-
-        if file_extension == "png" {
-            files.push((file_name, created));
-        }
-    }
-
-    // sort the files by the modified date
-    files.sort_by(|a, b| a.1.cmp(&b.1));
-
-    // return the most recent image
-    let mut latest_image: String = "".to_string(); // "" by default
-    if files.len() > 0 {
-        latest_image = files.last().unwrap().0.to_string();
-    }
-
-    latest_image
-}
-
-// Runs the find command to get the latest image:
-// find . -depth 1 -type f -ctime -2130s | sort -r | head -n1
-// "find all files in the current directory, depth of 1 (no subfolders), created in the last  2130s, sort by time created, and return the first one"
-// Output: grid-0034.png
-// @see https://rust-lang-nursery.github.io/rust-cookbook/os/external.html#run-piped-external-commands
-// @deprecated
-pub fn _latest_image_old(dir_path: String, elapsed: String) -> String {
-    let mut output: String = "".to_string();
-
-    let find_args: [&str; 9] = [
-        &dir_path,
-        "-name",
-        "*.png",
-        "-depth",
-        "1",
-        "-type",
-        "f",
-        "-ctime",
-        &format!("-{}s", elapsed),
-    ];
-    let mut find_output_child = std::process::Command::new("find")
-        .args(&find_args)
-        .current_dir(&dir_path)
-        .stdout(Stdio::piped())
-        .spawn()
-        .expect("Failed to execute `find` command");
-
-    if let Some(find_output) = find_output_child.stdout.take() {
-        let mut sort_output_child = Command::new("sort")
-            .arg("-r")
-            .stdin(find_output)
-            .stdout(Stdio::piped())
-            .spawn()
-            .expect("Failed to execute `sort` command");
-
-        find_output_child.wait().expect("Failed to wait on `find`");
-
-        if let Some(sort_output) = sort_output_child.stdout.take() {
-            let head_output_child = Command::new("head")
-                .args(&["-n", "1"])
-                .stdin(sort_output)
-                .stdout(Stdio::piped())
-                .spawn()
-                .expect("Failed to execute `head` command");
-
-            let head_stdout = head_output_child
-                .wait_with_output()
-                .expect("Failed to wait on `head`");
-
-            sort_output_child.wait().expect("Failed to wait on `sort`");
-
-            // convert the output to a string
-            // /absolute/path/to/Stable/Diffusion/directory/output/grid-0034.png
-            output = String::from_utf8(head_stdout.stdout)
-                .expect("failed to convert find output to string");
-
-            // remove the path from the beginning of the string
-            let from: String = format!("{}/", &dir_path); // /absolute/path/to/Stable/Diffusion/directory/output/
-            output = output.replace(&from, ""); // grid-0034.png\n
-
-            // remove the newline from the end of the string
-            output = output.replace("\n", ""); // grid-0034.png
-        }
-    }
-
-    output
-}
-
 // use nvidia-smi to get the version of cuda
 pub async fn get_cuda_version() -> Result<String, String> {
     let output = std::process::Command::new("nvidia-smi")
@@ -174,6 +55,61 @@ pub async fn get_gpu_memory() -> serde_json::Number {
     let memory = memory / 1000;
     serde_json::Number::from(memory)
     
+}
+
+pub fn check_or_clone_webui(webui_url: String, webui_path: String, window: &Window) -> Result<(), String> {
+    // check webui.py exists
+    let webui_py_file_path = format!("{}\\webui.py", webui_path);
+    let is_file = Path::new(&webui_py_file_path).is_file();
+    if is_file {
+        println!("webui.py exists");
+        let _ = window.emit("stdout", Payload {message: "webui.py exists".to_string(), stdtype: "stdout".to_string()}).unwrap();
+        // git pull to update
+        let repo = git2::Repository::open(webui_path).unwrap();
+        let mut remote = repo.find_remote("origin").unwrap();
+        let mut cb = git2::RemoteCallbacks::new();
+        cb.credentials(|_url, username_from_url, _allowed_types| {
+            git2::Cred::ssh_key_from_agent(username_from_url.unwrap())
+        });
+
+        // Print out our transfer progress.
+        cb.transfer_progress(|stats| {
+            if stats.received_objects() == stats.total_objects() {
+                print!(
+                    "Resolving deltas {}/{}\r",
+                    stats.indexed_deltas(),
+                    stats.total_deltas()
+                );
+            } else if stats.total_objects() > 0 {
+                print!(
+                    "Received {}/{} objects ({}) in {} bytes\r",
+                    stats.received_objects(),
+                    stats.total_objects(),
+                    stats.indexed_objects(),
+                    stats.received_bytes()
+                );
+            }
+            true
+        });
+
+        let mut fo = git2::FetchOptions::new();
+        fo.remote_callbacks(cb);
+        // Always fetch all tags.
+        // Perform a download and also update tips
+        fo.download_tags(git2::AutotagOption::All);
+        println!("Fetching {} for repo", remote.name().unwrap());
+        remote.fetch(&["master"], Some(&mut fo), None).unwrap();
+
+        let fetch_head = repo.find_reference("FETCH_HEAD").unwrap();
+        let fetch_commit = repo.reference_to_annotated_commit(&fetch_head).unwrap();
+        do_merge(&repo, &"master", fetch_commit).unwrap();
+
+    } else {
+        println!("webui.py does not exist. Cloning repository...");
+        let _ = window.emit("stdout", Payload {message: "webui.py does not exist. Cloning repository...".to_string(), stdtype: "stdout".to_string()}).unwrap();
+        let repo = git2::Repository::clone(&webui_url, webui_path).expect("clone error");
+    }
+    Ok(())
 }
 
 pub fn check_or_clone_repo(name:String, repo_url: String, path_dir: String, commit: String, window: &Window) -> Result<(), String> {
@@ -314,4 +250,112 @@ pub async fn kill_proc(pid: String) -> String {
     // let output_str = String::from_utf8(output.stdout).expect("Failed to kill process tree");
     // output_str
     "".to_string()
+}
+
+// git2 functions for git pull
+
+fn fast_forward(
+    repo: &git2::Repository,
+    lb: &mut git2::Reference,
+    rc: &git2::AnnotatedCommit,
+) -> Result<(), git2::Error> {
+    let name = match lb.name() {
+        Some(s) => s.to_string(),
+        None => String::from_utf8_lossy(lb.name_bytes()).to_string(),
+    };
+    let msg = format!("Fast-Forward: Setting {} to id: {}", name, rc.id());
+    println!("{}", msg);
+    lb.set_target(rc.id(), &msg)?;
+    repo.set_head(&name)?;
+    repo.checkout_head(Some(
+        git2::build::CheckoutBuilder::default()
+            // For some reason the force is required to make the working directory actually get updated
+            // I suspect we should be adding some logic to handle dirty working directory states
+            // but this is just an example so maybe not.
+            .force(),
+    ))?;
+    Ok(())
+}
+
+fn normal_merge(
+    repo: &git2::Repository,
+    local: &git2::AnnotatedCommit,
+    remote: &git2::AnnotatedCommit,
+) -> Result<(), git2::Error> {
+    let local_tree = repo.find_commit(local.id())?.tree()?;
+    let remote_tree = repo.find_commit(remote.id())?.tree()?;
+    let ancestor = repo
+        .find_commit(repo.merge_base(local.id(), remote.id())?)?
+        .tree()?;
+    let mut idx = repo.merge_trees(&ancestor, &local_tree, &remote_tree, None)?;
+
+    if idx.has_conflicts() {
+        println!("Merge conflicts detected...");
+        repo.checkout_index(Some(&mut idx), None)?;
+        return Ok(());
+    }
+    let result_tree = repo.find_tree(idx.write_tree_to(repo)?)?;
+    // now create the merge commit
+    let msg = format!("Merge: {} into {}", remote.id(), local.id());
+    let sig = repo.signature()?;
+    let local_commit = repo.find_commit(local.id())?;
+    let remote_commit = repo.find_commit(remote.id())?;
+    // Do our merge commit and set current branch head to that commit.
+    let _merge_commit = repo.commit(
+        Some("HEAD"),
+        &sig,
+        &sig,
+        &msg,
+        &result_tree,
+        &[&local_commit, &remote_commit],
+    )?;
+    // Set working tree to match head.
+    repo.checkout_head(None)?;
+    Ok(())
+}
+
+fn do_merge<'a>(
+    repo: &'a git2::Repository,
+    remote_branch: &str,
+    fetch_commit: git2::AnnotatedCommit<'a>,
+) -> Result<(), git2::Error> {
+    // 1. do a merge analysis
+    let analysis = repo.merge_analysis(&[&fetch_commit])?;
+
+    // 2. Do the appropriate merge
+    if analysis.0.is_fast_forward() {
+        println!("Doing a fast forward");
+        // do a fast forward
+        let refname = format!("refs/heads/{}", remote_branch);
+        match repo.find_reference(&refname) {
+            Ok(mut r) => {
+                fast_forward(repo, &mut r, &fetch_commit)?;
+            }
+            Err(_) => {
+                // The branch doesn't exist so just set the reference to the
+                // commit directly. Usually this is because you are pulling
+                // into an empty repository.
+                repo.reference(
+                    &refname,
+                    fetch_commit.id(),
+                    true,
+                    &format!("Setting {} to {}", remote_branch, fetch_commit.id()),
+                )?;
+                repo.set_head(&refname)?;
+                repo.checkout_head(Some(
+                    git2::build::CheckoutBuilder::default()
+                        .allow_conflicts(true)
+                        .conflict_style_merge(true)
+                        .force(),
+                ))?;
+            }
+        };
+    } else if analysis.0.is_normal() {
+        // do a normal merge
+        let head_commit = repo.reference_to_annotated_commit(&repo.head()?)?;
+        normal_merge(&repo, &head_commit, &fetch_commit)?;
+    } else {
+        println!("Nothing to do...");
+    }
+    Ok(())
 }
