@@ -6,8 +6,6 @@ import {
   MessageTypeEnum,
   sendPromptMessage,
   usePromptBook,
-  useSettings,
-  useWebuiUrl,
 } from "@/lib/chatbot"
 
 import { Image } from "./Image"
@@ -15,8 +13,6 @@ import { Image } from "./Image"
 export const Message = ({ message }: { message: MessageType }) => {
   const [selectedImage, setSelectedImage] = React.useState(-1)
   const addPrompt = usePromptBook((state) => state.addPrompt)
-  const [url] = useWebuiUrl((state) => [state.url])
-  const [talkToType] = useSettings((state) => [state.talkToType])
   return message.type === MessageTypeEnum.YOU ? (
     <div className="chat chat-end">
       <div className="chat-image avatar">
