@@ -148,7 +148,6 @@ export const sendPromptMessage = async (prompt: string) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         prompt: prompt,
-        model: sdsettings.model,
         width: sdsettings.width,
         height: sdsettings.height,
         batch_size: sdsettings.count,
@@ -235,11 +234,6 @@ export const usePromptBook = create<PromptBook>()((set) => ({
 // settings
 
 export type SDSettings = {
-  model:
-    | "stable-diffusion-v1-5"
-    | "stable-diffusion-512-v2-1"
-    | "stable-diffusion-768-v2-1"
-    | "anything-v3.0"
   width: number
   height: number
   count: number
@@ -261,7 +255,6 @@ export type SettingsState = {
 
 export const useSettings = create<SettingsState>()((set) => ({
   sdsettings: {
-    model: "stable-diffusion-v1-5",
     width: 512,
     height: 512,
     count: 4,
