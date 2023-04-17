@@ -1,7 +1,6 @@
 import { Album, Send, Settings2 } from "lucide-react"
 
 import {
-  MessageTypeEnum,
   sendPromptMessage,
   useChatBar,
   useMessageList,
@@ -11,10 +10,6 @@ import {
 } from "@/lib/chatbot"
 
 export const ChatBar = () => {
-  const [talkToType, setTalkToType] = useSettings((state) => [
-    state.talkToType,
-    state.setTalkToType,
-  ])
   const [prompt, setPrompt] = useChatBar((state) => [state.prompt, state.setPrompt])
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -38,14 +33,6 @@ export const ChatBar = () => {
     setPromptBookOpen(false)
     setSettingsOpen(false)
     setMsgboxOpen(true)
-  }
-
-  const onSelectLlamaType = () => {
-    setTalkToType(MessageTypeEnum.LLAMA)
-  }
-
-  const onSelectSDType = () => {
-    setTalkToType(MessageTypeEnum.SD)
   }
 
   return (
@@ -112,22 +99,6 @@ export const ChatBar = () => {
               : "rounded-lg"
           }`}
         >
-          <div className="dropdown dropdown-right dropdown-end">
-            <label tabIndex={0} className="btn m-1">
-              Talk to {talkToType}
-            </label>
-            <ul
-              tabIndex={0}
-              className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
-            >
-              <li>
-                <a onClick={onSelectLlamaType}>Llama</a>
-              </li>
-              <li>
-                <a onClick={onSelectSDType}>Stable Diffusion</a>
-              </li>
-            </ul>
-          </div>
           <input
             type="text"
             className="w-full text-lg outline-none focus:border-none bg-transparent"

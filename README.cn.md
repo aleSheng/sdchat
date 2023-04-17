@@ -18,7 +18,6 @@ SD Chat 是一个小工具, 帮助您配置并启动[stable diffusion WebUI](htt
 4. 可以保存提示词
 5. Made with Rust and Nextjs and Typescript and TailwindCSS
 6. 使用了 DaisyUI 的多主题
-7. Sidecar 用了 llama.cpp 编译出来的 main 可执行程序
 
 ## 截图
 

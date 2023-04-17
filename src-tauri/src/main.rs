@@ -44,8 +44,6 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             stop_webui,
             start_webui,
-            start_llama,
-            stop_llama,
             detect_git,
             detect_python,
             get_gpu_info,
@@ -322,49 +320,6 @@ async fn start_webui(webuipath: String, window: Window, storage: State<'_, Stora
         });
 
     Ok("".to_string())
-}
-
-#[tauri::command]
-async fn stop_llama(storage: State<'_, Storage>) -> Result<String, String> {
-    let pid = storage.store.lock().unwrap().get(&"llamapid".to_string()).expect("llamapid not found").to_string();
-    let output = funcs::kill_proc(pid).await;
-    println!("stop llama output: {}", output.to_string());
-    storage.store.lock().unwrap().remove_entry(&"llamapid".to_string()).expect("llamapid not found");
-    Ok(output.to_string())
-}
-#[tauri::command]
-async fn start_llama( modelpath: String, storage: State<'_, Storage>, window: Window ) -> Result<String, String> {
-    let (mut rx, mut child) = tauri::api::process::Command::new_sidecar("main")
-    .expect("side car error")
-    .args(["-m", &modelpath, "-ins","-c", "2048","--temp","0.2","-n","2560"])
-    .spawn()
-    .expect("Failed to spawn cargo");
-
-    storage.store.lock().unwrap().insert("llamapid".to_string(), child.pid().to_string());
-    let child = std::sync::Arc::new(Mutex::new(child));
-    window.listen("llamamsg", move |event| {
-        let payload: serde_json::Value = serde_json::from_str(event.payload().unwrap()).unwrap();
-        let msg = payload["message"].as_str().unwrap();
-        let msg = format!("{}\n", msg);
-        child
-            .lock()
-            .unwrap()
-            .write(msg.as_bytes())
-            .unwrap();
-    });
-
-    tauri::async_runtime::spawn(async move {
-      while let Some(event) = rx.recv().await {
-        println!("EVENT RECEIVED {:?}", event);
-        if let tauri::api::process::CommandEvent::Stderr(line) = &event {
-          window.emit("llamamsg", Payload {message: line.clone(), stdtype: "stdout".to_string()}).unwrap();
-        }
-        if let tauri::api::process::CommandEvent::Stdout(line) = event {
-            window.emit("llamamsg", Payload {message: line, stdtype: "stdout".to_string()}).unwrap();
-        }
-      }
-    });
-  Ok("done".to_string())
 }
 
 
